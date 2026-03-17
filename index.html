@@ -673,12 +673,14 @@ function openAdd() {
   winMode='add'; winOpen=true;
   form = { name:'', brand:'', category:CATS[0], type:TYPES[0], status:'available', paid:'', ask:'', final:'', notes:'', visible:true };
   photos = []; photosChanged=false;
+  requestMediaPermission();
   render();
 }
 function openEdit(id) {
   const it = items.find(i => String(i.id)===String(id)); if (!it) return;
   winMode='edit'; winOpen=true;
   form = {...it}; photos = getPhotos(it).slice(); photosChanged=false;
+  requestMediaPermission();
   render();
 }
 function closeWin() { winOpen=false; render(); }
@@ -1383,6 +1385,21 @@ document.addEventListener('change', function(e) {
 })();
 
 
+
+// Request camera/media permission explicitly
+// This shows the browser permission dialog on first use
+// Once granted, file input works normally on all Android/iOS devices
+async function requestMediaPermission() {
+  try {
+    // Try to access camera — this triggers Chrome's permission popup
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    // Permission granted — stop the stream immediately (we don't need it)
+    stream.getTracks().forEach(t => t.stop());
+  } catch(err) {
+    // Permission denied or not supported — file input may still work for gallery
+    console.log('Camera permission:', err.message);
+  }
+}
 
 async function silentRefresh() {
   try {
