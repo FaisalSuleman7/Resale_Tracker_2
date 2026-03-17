@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Items for Sale</title>
+<script>
+  const SHEET_URL    = "https://script.google.com/macros/s/AKfycby9uku8mYv2cUOkjCJiofCGDaWutTcfVmKThBXeS1kNdOPB6VjNq05X4QxxN9A3JfPR/exec";
+  const APP_PASSWORD = "yourpassword123";
+  const ADMIN_HASH   = "#gotoadmin";
+  const SESSION_DAYS = 7;
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ── RESET & BASE ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070f;--bg2:#0d0d1c;--bg3:#111128;--bg4:#161630;--bg5:#1c1c38;
+  --border:#1a1a30;--border2:#252548;--border3:#2e2e50;
+  --text:#e0e0ee;--muted:#555577;--faint:#0e0e20;
+  --accent:#fb923c;--accent2:#f59e0b;
+  --green:#10b981;--red:#ef4444;--blue:#6366f1;--purple:#8b5cf6;--amber:#f59e0b;
+  --glow-green:rgba(16,185,129,0.15);--glow-blue:rgba(99,102,241,0.15);
+}
+body.light{
+  --bg:#f4f0e8;--bg2:#ece8df;--bg3:#e2ddd4;--bg4:#d8d3c8;--bg5:#cec8bc;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.16);--border3:rgba(0,0,0,0.24);
+  --text:#1c1814;--muted:#7a7060;--faint:#d0cbbe;
+  --accent:#c2560a;--accent2:#a04010;
+  --green:#0d7a54;--red:#c0392b;--blue:#4248c4;--purple:#6d3fb5;--amber:#8a6000;
+  --glow-green:rgba(13,122,84,0.12);--glow-blue:rgba(66,72,196,0.12);
+}
+body.light .nav{background:rgba(244,240,232,0.93)}
+body.light .pub-hero::before{background:rgba(66,72,196,0.06)}
+body.light .pub-hero::after{background:rgba(194,86,10,0.05)}
+body.light .hero::before{background:rgba(66,72,196,0.05)}
+body.light .card-scrim{background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 55%)}
+body.light .pub-card-scrim{background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 55%)}
+body.light .pub-card-ph{background:linear-gradient(135deg,#e2ddd4,#d8d3c8)}
+body.light .card-img-ph{background:linear-gradient(135deg,#e2ddd4,#d8d3c8)}
+body.light .iw-inner{background:var(--bg2)}
+body.light .iw-left{background:var(--bg3)}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+#modal-root{position:relative;z-index:500}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes cardIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes wslide{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes soldIn{from{opacity:0;transform:scale(1.3) rotate(-10deg)}to{opacity:1;transform:scale(1) rotate(-18deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ── LOGIN ── */
+.login-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:1.5rem;animation:fadeIn 0.4s ease}
+.login-card{width:100%;max-width:380px;background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:2.5rem 2rem;display:flex;flex-direction:column;align-items:center;box-shadow:0 24px 64px rgba(0,0,0,0.5)}
+.login-icon{width:56px;height:56px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem;box-shadow:0 8px 24px rgba(99,102,241,0.35)}
+.login-icon svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.login-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px;text-align:center;color:var(--text)}
+.login-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:2rem}
+.login-field{width:100%;margin-bottom:12px}
+.login-field label{display:block;font-size:10px;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;font-weight:700}
+.login-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:13px 14px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:border-color 0.15s,background 0.15s;letter-spacing:0.5px}
+.login-input:focus{border-color:#6366f1}
+.login-input.shake{animation:shake 0.35s ease;border-color:var(--red)}
+.login-btn{width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:11px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;transition:opacity 0.15s;box-shadow:0 6px 22px rgba(99,102,241,0.3)}
+.login-btn:hover{opacity:0.88}
+.login-err{font-size:11px;color:var(--red);text-align:center;margin-top:10px;min-height:16px}
+.login-footer{margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:10px;color:var(--muted);text-align:center;width:100%;letter-spacing:0.5px}
+
+/* ── NAV ── */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:13px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;gap:10px;flex-wrap:wrap;background:rgba(7,7,15,0.92);backdrop-filter:blur(20px)}
+.nav-left{display:flex;align-items:center;gap:11px}
+.nav-icon{width:34px;height:34px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(99,102,241,0.3)}
+.nav-icon svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.nav-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--text)}
+.nav-sub{font-size:9px;color:var(--muted);letter-spacing:0.3px}
+.nav-right{display:flex;gap:7px;align-items:center}
+.ibtn{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:7px 13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;color:#888;transition:all 0.15s;white-space:nowrap}
+.ibtn:hover{border-color:var(--border2);color:#fff}
+.ibtn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.btn-add{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:9px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:opacity 0.15s;box-shadow:0 4px 14px rgba(99,102,241,0.28)}
+.btn-add:hover{opacity:0.88}
+.btn-add svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round}
+.btn-logout{background:transparent;border:1px solid var(--border);border-radius:9px;padding:7px 12px;cursor:pointer;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;color:var(--muted);display:flex;align-items:center;gap:5px;transition:all 0.15s;white-space:nowrap}
+.btn-logout:hover{color:var(--red);border-color:rgba(239,68,68,0.35)}
+.btn-logout svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── PUBLIC HERO ── */
+.pub-hero{padding:48px 22px 32px;border-bottom:1px solid var(--border);text-align:center;position:relative;overflow:hidden}
+.pub-hero::before{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(99,102,241,0.08);filter:blur(80px);top:-100px;left:-80px;pointer-events:none}
+.pub-hero::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(251,146,60,0.07);filter:blur(80px);bottom:-60px;right:-60px;pointer-events:none}
+.pub-hero-ey{font-size:10px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;z-index:1}
+.hdot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite;flex-shrink:0;box-shadow:0 0 8px rgba(16,185,129,0.5)}
+.pub-hero-h{font-family:'Playfair Display',serif;font-size:clamp(32px,5.5vw,54px);font-weight:700;line-height:1.05;margin-bottom:12px;color:var(--text);position:relative;z-index:1}
+.pub-hero-h em{font-style:italic;color:var(--accent)}
+.pub-hero-sub{font-size:14px;color:var(--muted);max-width:420px;margin:0 auto;line-height:1.65;position:relative;z-index:1}
+.pub-stats{display:flex;align-items:center;justify-content:center;gap:24px;margin-top:22px;flex-wrap:wrap;position:relative;z-index:1}
+.pub-stat{text-align:center}
+.pub-stat-v{font-size:24px;font-weight:700;line-height:1;color:var(--text)}
+.pub-stat-v.g{color:var(--green)}.pub-stat-v.b{color:var(--blue)}.pub-stat-v.a{color:var(--amber)}
+.pub-stat-l{font-size:9px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.7px}
+.pub-stat-div{width:1px;height:32px;background:var(--border)}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;justify-content:space-between;align-items:center;padding:11px 22px;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap}
+.fpills{display:flex;gap:4px;flex-wrap:wrap}
+.fp{background:var(--bg2);border:1px solid var(--border);border-radius:99px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all 0.15s;white-space:nowrap}
+.fp:hover{border-color:var(--border2);color:#aaa}
+.fp.on{background:rgba(99,102,241,0.15);border-color:#6366f1;color:#a5b4fc}
+.tb-right{display:flex;gap:7px;align-items:center}
+.search-in{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 12px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);width:140px;outline:none;transition:border-color 0.15s}
+.search-in::placeholder{color:var(--muted)}
+.search-in:focus{border-color:#6366f1}
+.sort-sel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);cursor:pointer;outline:none}
+.sort-sel option{background:var(--bg2)}
+
+/* ── PUBLIC CARDS ── */
+.pub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;padding:22px}
+.pub-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;overflow:hidden;cursor:pointer;transition:transform 0.22s,border-color 0.22s,box-shadow 0.22s;animation:cardIn 0.36s ease both;position:relative}
+.pub-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 14px 44px rgba(99,102,241,0.1)}
+.pub-card.pc-avail:hover{box-shadow:0 14px 44px rgba(16,185,129,0.1)}
+.pub-card-img{position:relative;width:100%;padding-top:70%;overflow:hidden}
+.pub-card-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 0.36s}
+.pub-card:hover .pub-card-img img{transform:scale(1.05)}
+.pub-card-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0d0d1c,#111130)}
+.pub-card-ph-icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--border2)}
+.pub-card-ph-icon svg{width:22px;height:22px;fill:none;stroke:var(--border2);stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+.pub-card-scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(7,7,15,0.88) 0%,transparent 55%);pointer-events:none}
+.pub-badge{position:absolute;top:11px;left:11px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:0.3px;white-space:nowrap;backdrop-filter:blur(6px)}
+.pb-a{background:rgba(16,185,129,0.18);color:#10b981;border:1px solid rgba(16,185,129,0.3)}
+.pb-s{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.25)}
+.pb-g{background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.25)}
+.pb-r{background:rgba(99,102,241,0.18);color:#818cf8;border:1px solid rgba(99,102,241,0.3)}
+.pub-cat-tag{position:absolute;bottom:11px;right:11px;font-size:9px;color:rgba(255,255,255,0.55);background:rgba(7,7,15,0.65);padding:2px 8px;border-radius:99px;backdrop-filter:blur(4px)}
+.pub-card-body{padding:15px 16px}
+.pub-card-name{font-family:'Playfair Display',serif;font-size:15px;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pub-card-brand{font-size:11px;color:var(--muted);margin-bottom:12px}
+.pub-price-row{display:flex;align-items:center;justify-content:space-between}
+.pub-price-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px}
+.pub-price-val{font-size:20px;font-weight:700;color:var(--accent)}
+.pub-price-sold{font-size:14px;font-weight:700;color:var(--red)}
+.pub-price-give{font-size:14px;font-weight:700;color:var(--amber)}
+.pub-price-reserved{font-size:14px;font-weight:700;color:#818cf8}
+
+/* ── STAMPS ── */
+.stamp-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.stamp-overlay.ov-sold{background:rgba(7,7,15,0.55)}
+.stamp-overlay.ov-give{background:rgba(7,7,15,0.45)}
+.stamp-overlay.ov-reserved{background:rgba(7,7,15,0.45)}
+.stamp{display:inline-block;padding:6px 15px;font-family:'Playfair Display',serif;font-size:22px;font-weight:700;letter-spacing:3px;text-transform:uppercase;border-width:3px;border-style:solid;border-radius:4px;transform:rotate(-18deg);opacity:0.92;line-height:1.1;text-align:center;animation:soldIn 0.4s ease}
+.stamp-sold{color:#ef4444;border-color:#ef4444;text-shadow:0 2px 8px rgba(239,68,68,0.4);box-shadow:0 0 14px rgba(239,68,68,0.2)}
+.stamp-give{color:#f59e0b;border-color:#f59e0b;text-shadow:0 2px 8px rgba(245,158,11,0.4);box-shadow:0 0 14px rgba(245,158,11,0.2)}
+.stamp-reserved{color:#818cf8;border-color:#818cf8;text-shadow:0 2px 8px rgba(129,140,248,0.4);box-shadow:0 0 14px rgba(129,140,248,0.2)}
+.img-dull{filter:grayscale(65%) brightness(0.7)!important}
+.img-reserved{filter:grayscale(40%) brightness(0.8)!important}
+
+/* ── PUBLIC DETAIL MODAL ── */
+.pub-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);z-index:300;display:flex;align-items:flex-end;justify-content:center;padding:0;animation:fadeIn 0.2s ease}
+@media(min-width:600px){.pub-modal-backdrop{align-items:center;padding:1.5rem}}
+.pub-modal{background:var(--bg2);border:1px solid var(--border);border-radius:22px 22px 0 0;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1)}
+@media(min-width:600px){.pub-modal{border-radius:22px;max-height:90vh}}
+.pub-modal-img-wrap{width:100%;padding-top:56%;position:relative;overflow:hidden;border-radius:0;background:var(--bg3)}
+@media(min-width:600px){.pub-modal-img-wrap{border-radius:18px 18px 0 0}}
+.pub-modal-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pub-modal-img-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.pub-modal-img-ph svg{width:48px;height:48px;fill:none;stroke:var(--border2);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.pub-modal-stamp-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.pub-modal-body{padding:22px 22px 32px}
+.pub-modal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.pub-modal-name{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;line-height:1.2;color:var(--text)}
+.pub-modal-close{background:var(--bg3);border:1px solid var(--border);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--muted);line-height:1;font-family:'DM Sans',sans-serif;flex-shrink:0;transition:all 0.15s}
+.pub-modal-close:hover{color:#fff;border-color:var(--border2)}
+.pub-modal-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.pub-modal-tag{font-size:10px;padding:3px 10px;border-radius:99px;background:var(--bg3);border:1px solid var(--border);color:var(--muted)}
+.pub-modal-status-tag{font-size:10px;padding:3px 10px;border-radius:99px;font-weight:700}
+.pub-modal-notes{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:18px;padding:12px 14px;background:var(--bg3);border-radius:12px;border:1px solid var(--border)}
+.pub-modal-price-box{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;background:var(--bg3);border-radius:14px;border:1px solid var(--border2);margin-bottom:16px}
+.pub-modal-price-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px}
+.pub-modal-price-val{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--accent)}
+.pub-modal-cta{width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.15s;box-shadow:0 6px 22px rgba(99,102,241,0.3)}
+.pub-modal-cta:hover{opacity:0.88}
+.pub-modal-cta svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── ADMIN HERO ── */
+.hero{padding:26px 22px 22px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(99,102,241,0.07);filter:blur(60px);top:-60px;left:-40px;pointer-events:none}
+.hero-ey{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;position:relative;z-index:1}
+.hero-h{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,40px);font-weight:700;line-height:1.05;color:var(--text);position:relative;z-index:1}
+.hero-h em{font-style:italic;color:var(--accent)}
+
+/* ── KPI ── */
+.kpi8-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.kpi8{background:var(--bg);padding:16px 18px;transition:background 0.2s}
+.kpi8:hover{background:var(--bg2)}
+.kpi8-lbl{font-size:9px;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+.kpi8-v{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1;margin-bottom:8px;color:var(--text)}
+.kpi8-v.g{color:var(--green)}.kpi8-v.r{color:var(--red)}.kpi8-v.b{color:var(--blue)}.kpi8-v.a{color:var(--amber)}
+.kpi8-s{font-size:10px;color:var(--muted)}
+.kpi8-bar{height:3px;background:var(--faint);border-radius:2px;overflow:hidden;margin-top:10px}
+.kpi8-bar-fill{height:100%;border-radius:2px;transition:width 0.8s cubic-bezier(0.16,1,0.3,1)}
+
+/* ── ANALYTICS ── */
+.analytics-section{padding:20px 22px;border-bottom:1px solid var(--border)}
+.analytics-header{margin-bottom:16px}
+.analytics-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--text);margin-bottom:3px}
+.analytics-sub{font-size:10px;color:var(--muted)}
+.analytics-grid{display:grid;grid-template-columns:1fr 2fr;gap:14px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:18px 20px}
+.chart-card-title{font-size:12px;font-weight:700;margin-bottom:14px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px}
+.donut-wrap{display:flex;align-items:center;gap:20px}
+.donut-svg{width:110px;height:110px;flex-shrink:0}
+.donut-legend{display:flex;flex-direction:column;gap:9px;flex:1}
+.dl-item{display:flex;align-items:center;gap:9px;font-size:12px}
+.dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dl-lbl{color:var(--muted);flex:1;font-size:11px}
+.dl-val{font-weight:700;font-size:14px;color:var(--text)}
+.bar-chart-wrap{display:flex;flex-direction:column;gap:10px}
+.bc-row{display:flex;align-items:center;gap:10px}
+.bc-lbl{font-size:10px;color:var(--muted);width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-track{flex:1;height:8px;background:var(--faint);border-radius:4px;overflow:hidden}
+.bc-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(0.16,1,0.3,1)}
+.bc-val{font-size:10px;font-weight:700;width:50px;text-align:right;flex-shrink:0}
+.bc-val.pos{color:var(--green)}.bc-val.neg{color:var(--red)}
+.fin-rows{display:flex;flex-direction:column}
+.fin-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.fin-row:last-child{border-bottom:none}
+.fin-row-lbl{font-size:11px;color:var(--muted)}
+.fin-row-val{font-size:15px;font-weight:700;color:var(--text)}
+.fin-row-val.g{color:var(--green)}.fin-row-val.r{color:var(--red)}.fin-row-val.b{color:var(--blue)}.fin-row-val.a{color:var(--amber)}
+.fin-margin{font-size:10px;color:var(--muted);margin-top:1px}
+.top-list{display:flex;flex-direction:column;gap:9px}
+.top-item{display:flex;align-items:center;gap:12px;padding:9px 11px;background:var(--bg3);border-radius:11px;border:1px solid var(--border)}
+.top-rank{font-size:11px;color:var(--muted);width:18px;flex-shrink:0;text-align:center}
+.top-name{flex:1;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-cat{font-size:9px;color:var(--muted);background:var(--bg4);padding:2px 7px;border-radius:99px;flex-shrink:0}
+.top-profit{font-size:13px;font-weight:700;flex-shrink:0}
+.top-profit.pos{color:var(--green)}.top-profit.neg{color:var(--red)}
+
+/* ── ADMIN CARDS ── */
+.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;padding:22px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;overflow:hidden;cursor:pointer;transition:transform 0.22s,border-color 0.22s,box-shadow 0.22s;animation:cardIn 0.36s ease both;position:relative}
+.card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 14px 44px rgba(99,102,241,0.1)}
+.card.avail-card:hover{box-shadow:0 14px 44px rgba(16,185,129,0.1)}
+.card.sold-card:hover{box-shadow:0 14px 44px rgba(239,68,68,0.08)}
+.card.card-dimmed{opacity:0.45}
+.card-img-wrap{position:relative;width:100%;padding-top:65%;overflow:hidden}
+.card-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 0.36s}
+.card:hover .card-img-wrap img{transform:scale(1.05)}
+.card-img-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0d0d1c,#111130)}
+.card-ph-icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--border)}
+.card-ph-icon svg{width:22px;height:22px;fill:none;stroke:var(--border2);stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+.card-scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(7,7,15,0.88) 0%,transparent 55%);pointer-events:none}
+.cbadge{position:absolute;top:11px;left:11px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:0.3px;white-space:nowrap;backdrop-filter:blur(6px)}
+.cb-a{background:rgba(16,185,129,0.18);color:#10b981;border:1px solid rgba(16,185,129,0.3)}
+.cb-s{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.25)}
+.cb-g{background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.25)}
+.cb-r{background:rgba(99,102,241,0.18);color:#818cf8;border:1px solid rgba(99,102,241,0.3)}
+.card-cat-tag{position:absolute;bottom:11px;right:11px;font-size:9px;color:rgba(255,255,255,0.55);background:rgba(7,7,15,0.65);padding:2px 8px;border-radius:99px}
+.card-hidden-badge{position:absolute;top:11px;right:11px;background:rgba(7,7,15,0.82);color:rgba(255,255,255,0.4);font-size:8px;padding:2px 8px;border-radius:99px;border:1px solid rgba(255,255,255,0.1)}
+.card-body{padding:14px 16px}
+.card-name{font-family:'Playfair Display',serif;font-size:15px;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-brand{font-size:11px;color:var(--muted);margin-bottom:12px}
+.card-prices{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;align-items:center;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cp{padding:8px 6px;text-align:center;background:var(--bg3)}
+.cp-dv{background:var(--border);align-self:stretch}
+.cp-l{font-size:8px;color:var(--muted);letter-spacing:0.3px;text-transform:uppercase;margin-bottom:3px}
+.cp-v{font-size:12px;font-weight:700;color:var(--text)}
+.cp-v.pos{color:var(--green)}.cp-v.neg{color:var(--red)}.cp-v.nu{color:var(--muted)}.cp-v.nd{color:#fff}
+.no-p{height:38px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.no-p span{font-size:10px;color:var(--muted)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5rem 1rem;gap:10px;grid-column:1/-1}
+.ering{width:56px;height:56px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center}
+.ering svg{width:24px;height:24px;fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.empty h3{font-family:'Playfair Display',serif;font-size:16px;color:#fff}.empty p{font-size:12px;color:var(--muted)}
+
+/* ── ITEM WINDOW (admin edit) ── */
+/* Mobile: slides up from bottom like auction modal. Desktop: full screen */
+.item-window{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn 0.2s ease;overflow-y:auto;-webkit-overflow-scrolling:touch}
+@media(min-width:700px){.item-window{align-items:center;padding:1rem}}
+.iw-inner{background:var(--bg2);border:1px solid var(--border);border-radius:22px 22px 0 0;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1);-webkit-overflow-scrolling:touch}
+@media(min-width:700px){.iw-inner{border-radius:22px;flex-direction:row;max-height:88vh}}
+.iw-left{flex-shrink:0;display:flex;flex-direction:column;background:var(--bg3);border-radius:22px 22px 0 0}
+@media(min-width:700px){.iw-left{width:42%;border-radius:22px 0 0 22px}}
+.iw-img-area{position:relative;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);height:220px}
+@media(min-width:700px){.iw-img-area{flex:1;height:auto}}
+.iw-img-area img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s}
+.iw-img-area:hover img{transform:scale(1.03)}
+.iw-img-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:2rem;text-align:center;width:100%;height:100%}
+.iw-img-ph svg{width:40px;height:40px;fill:none;stroke:var(--border2);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.iw-img-ph p{font-size:13px;color:var(--muted);font-weight:600}
+.iw-img-ph small{font-size:10px;color:var(--faint)}
+.iw-img-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.iw-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);transition:background 0.2s;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.iw-img-area:hover .iw-img-overlay{background:rgba(0,0,0,0.35)}
+.iw-img-change{background:rgba(0,0,0,0.75);color:#fff;font-size:11px;font-weight:700;padding:7px 14px;border-radius:99px;opacity:0;transition:opacity 0.2s}
+.iw-img-area:hover .iw-img-change{opacity:1}
+.iw-preview-bar{padding:14px 16px;border-top:1px solid var(--border);background:var(--bg3);flex-shrink:0}
+.iw-preview-name{font-family:'Playfair Display',serif;font-size:15px;color:var(--text);margin-bottom:3px}
+.iw-preview-sub{font-size:10px;color:var(--muted)}
+.iw-right{flex:1;overflow-y:auto;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.iw-top{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.iw-top h2{font-family:'Playfair Display',serif;font-size:18px;color:var(--text)}
+.iw-close{background:var(--bg3);border:1px solid var(--border);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;color:var(--muted);line-height:1;font-family:'DM Sans',sans-serif;transition:all 0.15s;flex-shrink:0}
+.iw-close:hover{color:#fff}
+.iw-body{padding:20px;flex:1}
+.iw-section{margin-bottom:22px}
+.iw-section-title{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);font-weight:700}
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:9px;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:5px;font-weight:700}
+.fi{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);transition:border-color 0.15s,background 0.15s;outline:none}
+.fi:focus{border-color:#6366f1}
+.fi::placeholder{color:var(--muted)}
+.fi option{background:var(--bg2)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* STATUS CHIPS */
+.schips{display:flex;gap:8px;flex-wrap:wrap}
+.sc{flex:1;min-width:70px;text-align:center;padding:10px 8px;border-radius:11px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:all 0.15s;font-family:'DM Sans',sans-serif}
+.sc-a{background:rgba(16,185,129,0.08);color:var(--green)}
+.sc-s{background:rgba(239,68,68,0.08);color:var(--red)}
+.sc-g{background:rgba(245,158,11,0.08);color:var(--amber)}
+.sc-r{background:rgba(99,102,241,0.08);color:#818cf8}
+.sc-a.sel{border-color:var(--green);background:rgba(16,185,129,0.15)}
+.sc-s.sel{border-color:var(--red);background:rgba(239,68,68,0.15)}
+.sc-g.sel{border-color:var(--amber);background:rgba(245,158,11,0.15)}
+.sc-r.sel{border-color:#6366f1;background:rgba(99,102,241,0.15)}
+
+/* VISIBILITY */
+.vis-toggle{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:11px;cursor:pointer;transition:all 0.15s;user-select:none}
+.vis-toggle:hover{border-color:var(--border2)}
+.vis-track{width:36px;height:20px;border-radius:10px;border:1.5px solid var(--border2);background:var(--faint);position:relative;flex-shrink:0;transition:background 0.2s}
+.vis-track.on{background:var(--green);border-color:var(--green)}
+.vis-thumb{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.vis-track.on .vis-thumb{transform:translateX(16px)}
+.vis-label{font-size:12px;font-weight:700;flex:1;color:#fff}
+.vis-hint{font-size:9px;color:var(--muted)}
+
+/* ANALYSIS */
+.analysis{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:15px 17px;margin-top:4px}
+.a-hd{font-size:9px;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:13px;font-weight:700}
+.a-row{margin-bottom:9px}
+.a-meta{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;color:var(--muted)}
+.a-meta span:last-child{font-weight:700;color:#fff}
+.a-track{height:4px;background:var(--faint);border-radius:3px;overflow:hidden}
+.a-fill{height:100%;border-radius:3px;transition:width 0.5s cubic-bezier(0.16,1,0.3,1)}
+.fp-paid{background:var(--blue)}.fp-ask{background:var(--amber)}.fp-final{background:var(--green)}
+.a-bot{display:flex;justify-content:space-between;align-items:center;padding-top:11px;border-top:1px solid var(--border);margin-top:10px}
+.a-bot-l{font-size:11px;color:var(--muted)}
+.a-bot-v{font-family:'Playfair Display',serif;font-size:26px;font-weight:700}
+.profit-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700}
+.pb-pos{background:rgba(16,185,129,0.12);color:var(--green);border:1px solid rgba(16,185,129,0.25)}
+.pb-neg{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25)}
+.pb-zero{background:var(--bg4);color:var(--muted);border:1px solid var(--border)}
+
+/* WINDOW FOOTER */
+.iw-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;background:var(--bg2)}
+.btn-del{background:transparent;border:1px solid rgba(239,68,68,0.3);border-radius:9px;padding:9px 16px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--red);font-weight:700;transition:all 0.15s}
+.btn-del:hover{background:rgba(239,68,68,0.1)}
+.btn-can{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 16px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:700;transition:all 0.15s}
+.btn-can:hover{color:#fff}
+.btn-sv{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:9px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity 0.15s;display:flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(99,102,241,0.28)}
+.btn-sv:hover{opacity:0.88}
+.btn-sv .spin-small{width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+
+/* MULTI-PHOTO */
+.photo-strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.photo-thumb{position:relative;width:68px;height:68px;border-radius:9px;overflow:hidden;flex-shrink:0;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s}
+.photo-thumb.cover-thumb{border-color:#6366f1;box-shadow:0 0 12px rgba(99,102,241,0.3)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-thumb-remove{position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.8);color:#fff;border:none;border-radius:50%;width:17px;height:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;line-height:1}
+.photo-thumb-cover{position:absolute;bottom:2px;left:2px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:7px;font-weight:800;padding:1px 5px;border-radius:3px}
+.photo-add-btn{width:68px;height:68px;border-radius:9px;border:1.5px dashed var(--border2);background:var(--bg3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;flex-shrink:0;transition:border-color 0.15s;gap:3px}
+.photo-add-btn:hover{border-color:#6366f1}
+.photo-add-btn svg{width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.photo-add-btn span{font-size:9px;color:var(--muted)}
+.photo-add-btn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.photo-count-badge{position:absolute;bottom:9px;left:9px;background:rgba(7,7,15,0.72);color:rgba(255,255,255,0.75);font-size:9px;padding:2px 7px;border-radius:99px;display:flex;align-items:center;gap:4px;backdrop-filter:blur(4px)}
+
+/* GALLERY */
+.gallery-wrap{position:relative;width:100%;padding-top:56%;overflow:hidden;background:var(--bg3);border-radius:0}
+@media(min-width:600px){.gallery-wrap{border-radius:18px 18px 0 0}}
+.gallery-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity 0.3s}
+.gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(7,7,15,0.65);border:none;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;font-size:20px;transition:background 0.15s;line-height:1;backdrop-filter:blur(4px)}
+.gallery-arrow:hover{background:rgba(7,7,15,0.9)}
+.gallery-arrow.left{left:11px}
+.gallery-arrow.right{right:11px}
+.gallery-dots{position:absolute;bottom:11px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:10}
+.gallery-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.35);transition:background 0.2s,transform 0.2s;cursor:pointer}
+.gallery-dot.active{background:#fff;transform:scale(1.35)}
+.gallery-stamp-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
+
+/* LOADING */
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px}
+.spinner{width:38px;height:38px;border:2px solid var(--border);border-top-color:#6366f1;border-radius:50%;animation:spin 0.8s linear infinite;box-shadow:0 0 16px rgba(99,102,241,0.2)}
+.loading-screen p{font-size:13px;color:var(--muted)}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
+.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:99px;padding:10px 20px;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;animation:tin 0.25s both;box-shadow:0 8px 28px rgba(0,0,0,0.3)}
+
+/* RESPONSIVE */
+@media(max-width:900px){.analytics-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.kpi8-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ibtn span{display:none}.frow3{grid-template-columns:1fr 1fr}.pub-grid{padding:14px;gap:12px}.items-grid{padding:14px;gap:12px}}
+@media(max-width:400px){.kpi8-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.frow2{grid-template-columns:1fr}}
+</style>
+
+</head>
+<body>
+<div id="root"></div>
+<div id="modal-root"></div>
+<!-- File inputs handled inline via label elements -->
+
+<div class="toast-wrap" id="tw"></div>
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+const CATS  = ['Electronics','Appliances','Furniture','Sports','Clothing','Accessories','Other'];
+const TYPES = ['Home Appliance','Computer / Tech','Audio / Video','Kitchen','Sports Equipment','Furniture','Clothing','Other'];
+const HEADERS = ['id','name','brand','category','type','status','paid','ask','final','notes','img','visible'];
+
+const SEED = [
+  {id:'1', name:'Router',                   brand:'Mercury', category:'Electronics', type:'Computer / Tech',  paid:0,  ask:15,  final:15, status:'sold',      notes:''},
+  {id:'2', name:'Drill Machine',            brand:'',        category:'Appliances',  type:'Home Appliance',   paid:0,  ask:100, final:0,  status:'available', notes:''},
+  {id:'3', name:'Vacuum',                   brand:'Bosch',   category:'Appliances',  type:'Home Appliance',   paid:0,  ask:30,  final:0,  status:'available', notes:''},
+  {id:'4', name:'Drying Rack 1',            brand:'',        category:'Other',       type:'Other',            paid:0,  ask:20,  final:0,  status:'available', notes:''},
+  {id:'5', name:'Drying Rack 2',            brand:'',        category:'Other',       type:'Other',            paid:10, ask:10,  final:17, status:'sold',      notes:''},
+  {id:'6', name:'Sandwich Maker',           brand:'',        category:'Appliances',  type:'Kitchen',          paid:0,  ask:15,  final:0,  status:'available', notes:''},
+  {id:'7', name:'Dough Maker',              brand:'',        category:'Appliances',  type:'Kitchen',          paid:0,  ask:15,  final:0,  status:'available', notes:''},
+  {id:'8', name:'Toaster',                  brand:'SENCOR',  category:'Appliances',  type:'Kitchen',          paid:0,  ask:10,  final:0,  status:'available', notes:''},
+  {id:'9', name:'Weighing Scale',           brand:'',        category:'Other',       type:'Other',            paid:0,  ask:10,  final:0,  status:'available', notes:''},
+  {id:'10',name:'Printer',                  brand:'',        category:'Electronics', type:'Computer / Tech',  paid:0,  ask:30,  final:0,  status:'available', notes:''},
+  {id:'11',name:'Monitor 1',                brand:'HP',      category:'Electronics', type:'Computer / Tech',  paid:0,  ask:20,  final:38, status:'sold',      notes:''},
+  {id:'12',name:'Monitor 2',                brand:'HP',      category:'Electronics', type:'Computer / Tech',  paid:0,  ask:20,  final:0,  status:'available', notes:''},
+  {id:'13',name:'Monitor 3',                brand:'HP',      category:'Electronics', type:'Computer / Tech',  paid:0,  ask:15,  final:0,  status:'available', notes:''},
+  {id:'14',name:'Chair 1',                  brand:'',        category:'Furniture',   type:'Furniture',        paid:15, ask:15,  final:0,  status:'available', notes:''},
+  {id:'15',name:'Chair 2',                  brand:'IKEA',    category:'Furniture',   type:'Furniture',        paid:0,  ask:15,  final:13, status:'sold',      notes:''},
+  {id:'16',name:'Camera',                   brand:'HP',      category:'Electronics', type:'Computer / Tech',  paid:0,  ask:5,   final:0,  status:'available', notes:''},
+  {id:'17',name:'Shoe Rack',                brand:'',        category:'Furniture',   type:'Furniture',        paid:2,  ask:5,   final:0,  status:'available', notes:''},
+  {id:'18',name:'Dressing Table',           brand:'',        category:'Furniture',   type:'Furniture',        paid:0,  ask:30,  final:0,  status:'available', notes:''},
+  {id:'19',name:'Fridge',                   brand:'AMICON',  category:'Appliances',  type:'Home Appliance',   paid:20, ask:40,  final:50, status:'sold',      notes:''},
+  {id:'20',name:'Camera Stand',             brand:'',        category:'Electronics', type:'Computer / Tech',  paid:0,  ask:10,  final:0,  status:'available', notes:''},
+  {id:'21',name:'Small Table 1',            brand:'',        category:'Furniture',   type:'Furniture',        paid:0,  ask:5,   final:0,  status:'available', notes:''},
+  {id:'22',name:'Small Table 2',            brand:'',        category:'Furniture',   type:'Furniture',        paid:0,  ask:5,   final:0,  status:'available', notes:''},
+  {id:'23',name:'Oven',                     brand:'',        category:'Appliances',  type:'Kitchen',          paid:0,  ask:15,  final:20, status:'sold',      notes:''},
+  {id:'24',name:'Filter Jug with Filters',  brand:'BRITA',   category:'Appliances',  type:'Kitchen',          paid:0,  ask:20,  final:0,  status:'available', notes:''},
+  {id:'25',name:'Table Tennis Set',         brand:'',        category:'Sports',      type:'Sports Equipment', paid:0,  ask:5,   final:7,  status:'sold',      notes:''},
+  {id:'26',name:'Curtains with Rod & Lamp', brand:'',        category:'Other',       type:'Other',            paid:0,  ask:10,  final:20, status:'sold',      notes:''},
+  {id:'27',name:'Iron Spray',               brand:'',        category:'Appliances',  type:'Home Appliance',   paid:0,  ask:20,  final:0,  status:'available', notes:''},
+  {id:'28',name:'Keyboard and Mouse',       brand:'HP',      category:'Electronics', type:'Computer / Tech',  paid:0,  ask:15,  final:15, status:'sold',      notes:''},
+  {id:'29',name:'Vacuum (Siemens)',          brand:'Siemens', category:'Appliances',  type:'Home Appliance',   paid:0,  ask:35,  final:30, status:'sold',      notes:''},
+  {id:'30',name:'Basketball',              brand:'',        category:'Sports',      type:'Sports Equipment', paid:0,  ask:5,   final:7,  status:'sold',      notes:''},
+  {id:'31',name:'Fan',                      brand:'',        category:'Appliances',  type:'Home Appliance',   paid:0,  ask:18,  final:17, status:'sold',      notes:''},
+  {id:'32',name:'Lamp 1',                   brand:'',        category:'Other',       type:'Other',            paid:0,  ask:15,  final:15, status:'sold',      notes:''},
+  {id:'33',name:'Lamp 2',                   brand:'',        category:'Other',       type:'Other',            paid:0,  ask:15,  final:15, status:'sold',      notes:''},
+  {id:'34',name:'Fridge 1',                 brand:'AMICON',  category:'Appliances',  type:'Home Appliance',   paid:20, ask:35,  final:35, status:'sold',      notes:''},
+  {id:'35',name:'Fridge 2',                 brand:'IKEA',    category:'Appliances',  type:'Home Appliance',   paid:35, ask:70,  final:65, status:'sold',      notes:''},
+  {id:'36',name:'HDMI Cable',               brand:'',        category:'Electronics', type:'Computer / Tech',  paid:0,  ask:5,   final:5,  status:'sold',      notes:''},
+  {id:'37',name:'Mattress',                 brand:'',        category:'Furniture',   type:'Furniture',        paid:0,  ask:15,  final:15, status:'sold',      notes:''},
+  {id:'38',name:'Router 2',                 brand:'',        category:'Electronics', type:'Computer / Tech',  paid:0,  ask:12,  final:10, status:'sold',      notes:''},
+  {id:'39',name:'Dumbbells',                brand:'',        category:'Sports',      type:'Sports Equipment', paid:0,  ask:15,  final:15, status:'sold',      notes:''},
+  {id:'40',name:'Mattress 2',               brand:'',        category:'Furniture',   type:'Furniture',        paid:0,  ask:15,  final:15, status:'sold',      notes:''},
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let items = [], filter = 'all', catFilter = 'all';
+let winOpen = false, winMode = null, form = {}, photos = [], photosChanged = false;
+let galleryIdx = 0;
+let darkMode = true, searchQ = '', saving = false, loading = true;
+let loginErr = '', pwVisible = false, pubDetailItem = null;
+
+// ─── MODE ─────────────────────────────────────────────────────────────────────
+function getMode() {
+  if (window.location.hash === ADMIN_HASH) {
+    if (isLoggedIn()) { sessionStorage.setItem('rt-admin','1'); return 'admin'; }
+    return 'login';
+  }
+  if (isLoggedIn() && sessionStorage.getItem('rt-admin') === '1') return 'admin';
+  return 'public';
+}
+window.addEventListener('hashchange', () => render());
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+function isLoggedIn() {
+  try {
+    const s = localStorage.getItem('rt-session');
+    if (!s) return false;
+    const { expiry } = JSON.parse(s);
+    if (Date.now() > expiry) { localStorage.removeItem('rt-session'); return false; }
+    return true;
+  } catch(e) { return false; }
+}
+function doLogin() {
+  const input = document.getElementById('pw-input');
+  if (!input) return;
+  if (input.value.trim() === APP_PASSWORD) {
+    localStorage.setItem('rt-session', JSON.stringify({ expiry: Date.now() + SESSION_DAYS*24*60*60*1000 }));
+    sessionStorage.setItem('rt-admin', '1');
+    loginErr = '';
+    history.replaceState(null, '', window.location.pathname);
+    render();
+    if (!items.length) loadItems();
+  } else {
+    loginErr = 'Wrong password — try again';
+    input.classList.add('shake');
+    setTimeout(() => input.classList.remove('shake'), 400);
+    render();
+    setTimeout(() => { const i = document.getElementById('pw-input'); if(i) i.focus(); }, 50);
+  }
+}
+function doLogout() {
+  if (!confirm('Log out?')) return;
+  localStorage.removeItem('rt-session');
+  sessionStorage.removeItem('rt-admin');
+  history.replaceState(null, '', window.location.pathname);
+  render(); // just re-render as public — keep items in memory
+}
+function togglePw() {
+  pwVisible = !pwVisible;
+  const i = document.getElementById('pw-input');
+  if (i) i.type = pwVisible ? 'text' : 'password';
+}
+function handleLoginKey(e) { if (e.key === 'Enter') doLogin(); }
+
+// ─── PHOTOS ───────────────────────────────────────────────────────────────────
+// Photos are stored as a JSON array in the Sheet (base64 strings).
+// item.photos = [ "data:image/jpeg;base64,..." , ... ]  (up to 6 photos)
+// item.img = first photo (cover) — kept for backward compatibility
+// No localStorage needed — photos come from Sheet on every load.
+function getPhotos(it) {
+  if (it.photos && Array.isArray(it.photos) && it.photos.length) return it.photos;
+  if (it.img) return [it.img];
+  return [];
+}
+function getCover(it) {
+  const p = getPhotos(it);
+  return p.length ? p[0] : null;
+}
+
+// ─── SHEET API ────────────────────────────────────────────────────────────────
+// POST with Content-Type: text/plain — no CORS preflight, full body readable.
+// Photos are included in the POST body (base64 array) — stored in Sheet.
+// This means any device/browser can see photos from the shared link.
+async function apiCall(payload) {
+  if (!SHEET_URL || SHEET_URL.includes('PASTE_YOUR')) return localFallback(payload);
+  
+  // Use GET for getAll and small payloads (no photos)
+  // Use POST only when photos are present (too large for URL)
+  const hasPhotos = payload.item && payload.item.photos && payload.item.photos.length > 0;
+  
+  if (!hasPhotos) {
+    // GET request — no CORS preflight, always works
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    const url = SHEET_URL + '?d=' + encoded + '&t=' + Date.now();
+    const res  = await fetch(url, { method: 'GET', redirect: 'follow' });
+    const text = await res.text();
+    const m = text.match(/\{[\s\S]*\}/);
+    return JSON.parse(m ? m[0] : text);
+  } else {
+    // POST for photo uploads — use text/plain to avoid CORS preflight
+    const res = await fetch(SHEET_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body:    JSON.stringify(payload),
+    });
+    const text = await res.text();
+    const m = text.match(/\{[\s\S]*\}/);
+    return JSON.parse(m ? m[0] : text);
+  }
+}
+
+function localFallback(payload) {
+  const key = 'rt-local'; let stored = [];
+  try { stored = JSON.parse(localStorage.getItem(key)) || []; } catch(e) {}
+  if (payload.action === 'getAll') return { items: stored };
+  if (payload.action === 'save') {
+    const idx = stored.findIndex(i => i.id === payload.item.id);
+    idx >= 0 ? stored[idx] = payload.item : stored.unshift(payload.item);
+    localStorage.setItem(key, JSON.stringify(stored)); return { success: true };
+  }
+  if (payload.action === 'delete') {
+    stored = stored.filter(i => i.id !== payload.id);
+    localStorage.setItem(key, JSON.stringify(stored)); return { success: true };
+  }
+}
+
+function normalise(it) {
+  it = { ...it, id: String(it.id) }; // always string id
+  // Parse photos — Sheet stores as JSON string
+  let photos = [];
+  if (it.photos) {
+    try { photos = typeof it.photos === 'string' ? JSON.parse(it.photos) : it.photos; } catch(e) {}
+  }
+  if (!photos.length && it.img) photos = [it.img]; // backward compat
+  return {
+    ...it,
+    paid:    parseFloat(it.paid)    || 0,
+    ask:     parseFloat(it.ask)     || 0,
+    final:   parseFloat(it.final)   || 0,
+    visible: (it.visible === false || it.visible === 'false' || it.visible === 'FALSE') ? false : true,
+    photos:  photos,
+    img:     photos[0] || null,
+  };
+}
+
+async function loadItems() {
+  loading = true; render();
+  try {
+    const res = await apiCall({ action: 'getAll' });
+    if (res.error) {
+      showToast('Sheet error: ' + res.error);
+      items = SEED.map(i => ({ ...i, img: null, visible: true }));
+    } else if (res.items && res.items.length > 0) {
+      items = res.items.map(normalise);
+    } else {
+      // Empty sheet — seed all 40 items in batches of 5
+      items = SEED.map(i => ({ ...i, img: null, visible: true }));
+      loading = false; render();
+      showToast('First run — saving 40 items to Sheet…');
+      for (let i = 0; i < items.length; i += 5) {
+        await Promise.all(items.slice(i, i+5).map(item => apiCall({ action:'save', item })));
+      }
+      showToast('All 40 items saved to Sheet ✓');
+    }
+  } catch(e) {
+    showToast('Sheet error: ' + e.message);
+    items = SEED.map(i => ({ ...i, img: null, visible: true }));
+  }
+  loading = false; render();
+}
+
+// ─── THEME ────────────────────────────────────────────────────────────────────
+function loadTheme() { darkMode = localStorage.getItem('rt-theme') !== 'light'; applyTheme(); }
+function applyTheme() { document.body.className = darkMode ? '' : 'light'; }
+function toggleTheme() { darkMode=!darkMode; applyTheme(); localStorage.setItem('rt-theme', darkMode?'dark':'light'); render(); }
+
+// ─── CALCS ────────────────────────────────────────────────────────────────────
+const fc = n => { const v = parseFloat(n); return v ? '€'+Math.round(v) : '—'; };
+const calcP = it => (parseFloat(it.final)||0) - (parseFloat(it.paid)||0);
+
+function stats() {
+  const sold = items.filter(i => i.status==='sold');
+  const avail = items.filter(i => i.status==='available');
+  const give = items.filter(i => i.status==='giveaway');
+  const res = items.filter(i => i.status==='reserved');
+  const inv = items.reduce((s,i) => s+(i.paid||0), 0);
+  const rev = sold.reduce((s,i) => s+(i.final||0), 0);
+  const pro = sold.reduce((s,i) => s+calcP(i), 0);
+  const pot = avail.reduce((s,i) => s+(i.ask||0), 0);
+  const catProfit = {};
+  sold.forEach(i => { catProfit[i.category] = (catProfit[i.category]||0) + calcP(i); });
+  return { inv, rev, pro, pot, catProfit,
+    n:items.length, sold:sold.length, avail:avail.length, give:give.length, res:res.length };
+}
+
+function shown(forPublic) {
+  let l = [...items];
+  if (forPublic) l = l.filter(i => i.visible !== false);
+  if (filter !== 'all') l = l.filter(i => i.status === filter);
+  if (catFilter !== 'all') l = l.filter(i => i.category === catFilter);
+  if (searchQ) l = l.filter(i => (i.name+i.brand).toLowerCase().includes(searchQ.toLowerCase()));
+  return l;
+}
+
+// ─── ADMIN ACTIONS ────────────────────────────────────────────────────────────
+function openAdd() {
+  winMode='add'; winOpen=true;
+  form = { name:'', brand:'', category:CATS[0], type:TYPES[0], status:'available', paid:'', ask:'', final:'', notes:'', visible:true };
+  photos = []; photosChanged=false;
+  render();
+}
+function openEdit(id) {
+  const it = items.find(i => String(i.id)===String(id)); if (!it) return;
+  winMode='edit'; winOpen=true;
+  form = {...it}; photos = getPhotos(it).slice(); photosChanged=false;
+  render();
+}
+function closeWin() { winOpen=false; render(); }
+
+// Read current DOM inputs into form before any action that triggers render
+function syncForm() {
+  const g = id => document.getElementById(id);
+  if (g('fi-name'))  form.name     = g('fi-name').value;
+  if (g('fi-brand')) form.brand    = g('fi-brand').value;
+  if (g('fi-cat'))   form.category = g('fi-cat').value;
+  if (g('fi-type'))  form.type     = g('fi-type').value;
+  if (g('fi-notes')) form.notes    = g('fi-notes').value;
+  if (g('fi-paid'))  form.paid     = g('fi-paid').value;
+  if (g('fi-ask'))   form.ask      = g('fi-ask').value;
+  if (g('fi-final')) form.final    = g('fi-final').value;
+}
+
+function setStatus(s) { syncForm(); form.status = s; render(); }
+function toggleVis()  { syncForm(); form.visible = form.visible !== false ? false : true; render(); }
+
+function updateAnalysisBox() {
+  form.paid  = document.getElementById('fi-paid')?.value  || form.paid;
+  form.ask   = document.getElementById('fi-ask')?.value   || form.ask;
+  form.final = document.getElementById('fi-final')?.value || form.final;
+  const el = document.getElementById('analysis-box');
+  if (el) el.innerHTML = renderAnalysis();
+}
+
+async function save() {
+  syncForm();
+  if (!form.name.trim()) { showToast('Enter an item name'); return; }
+  // Disable button directly without full re-render (avoids modal rebuild during save)
+  const btn = document.querySelector('.btn-sv');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  const savedMode = winMode; // capture before any state change
+  const nextId = form.id ? String(form.id).trim() : String(Math.max(0, ...items.map(i => parseInt(i.id)||0)) + 1);
+  // Only include photos in payload if they changed — avoids huge POST for simple edits
+  const existingPhotos = photosChanged ? photos.slice() : (form.photos || []);
+  const it = { ...form, photos: existingPhotos, img: existingPhotos[0]||null, id: nextId,
+    paid:parseFloat(form.paid)||0, ask:parseFloat(form.ask)||0, final:parseFloat(form.final)||0 };
+  // For payload, strip photos if not changed to keep request small
+  const payload = photosChanged
+    ? { action:'save', item: it }
+    : { action:'save', item: { ...it, photos: [] } }; // send empty array, Sheet keeps existing
+  console.log('Saving id:', nextId, 'photosChanged:', photosChanged, 'mode:', savedMode);
+  try {
+    const saveRes = await apiCall(payload);
+    console.log('Save result:', JSON.stringify(saveRes));
+    if (savedMode==='edit') items = items.map(i => String(i.id)===String(it.id) ? it : i);
+    else items.unshift(it);
+    closeWin();
+    showToast(savedMode==='edit' ? 'Item updated ✓' : 'Item added ✓');
+    setTimeout(loadItems, 2000);
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save item →'; }
+    showToast('Save failed: '+e.message);
+  }
+}
+
+async function del() {
+  if (!confirm('Delete "'+form.name+'"?')) return;
+  saving=true; render();
+  try {
+    await apiCall({ action:'delete', id:form.id });
+    items = items.filter(i => String(i.id)!==String(form.id));
+    saving=false; closeWin(); showToast('Item deleted');
+  } catch(e) { saving=false; render(); showToast('Delete failed'); }
+}
+
+// Imgur Client ID — free anonymous uploads, no account needed
+const IMGUR_CLIENT_ID = '546c25a59c58ad7';
+
+async function uploadToImgur(file) {
+  // Resize image before upload if too large (max 1MB for speed)
+  const resized = await resizeImage(file, 1200, 0.82);
+  const formData = new FormData();
+  formData.append('image', resized);
+  const res = await fetch('https://api.imgur.com/3/image', {
+    method: 'POST',
+    headers: { 'Authorization': 'Client-ID ' + IMGUR_CLIENT_ID },
+    body: formData
+  });
+  const data = await res.json();
+  if (data.success) return data.data.link;
+  throw new Error(data.data && data.data.error ? data.data.error : 'Upload failed');
+}
+
+// Resize image to max width, returns a Blob
+function resizeImage(file, maxWidth, quality) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality || 0.82);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+function onImg(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  syncForm();
+  const savedForm = { ...form };
+  const toLoad = [];
+  for (let i = 0; i < files.length && photos.length + toLoad.length < 6; i++) {
+    toLoad.push(files[i]);
+  }
+  if (!toLoad.length) { showToast('Max 6 photos reached'); return; }
+  showToast('Uploading ' + toLoad.length + ' photo(s)…');
+
+  let done = 0;
+  toLoad.forEach(async (f) => {
+    try {
+      const url = await uploadToImgur(f);
+      photos.push(url);
+      photosChanged = true;
+    } catch(err) {
+      console.warn('Imgur upload failed:', err.message);
+      // Fallback to base64 if Imgur fails
+      const base64 = await new Promise(res => {
+        const r = new FileReader();
+        r.onload = ev => res(ev.target.result);
+        r.readAsDataURL(f);
+      });
+      photos.push(base64);
+      photosChanged = true;
+    }
+    done++;
+    if (done === toLoad.length) {
+      form = { ...form, ...savedForm };
+      showToast('Photo(s) ready ✓');
+      render();
+    }
+  });
+}
+function removePhoto(idx) { syncForm(); photos.splice(idx, 1); photosChanged=true; render(); }
+function setCover(idx) { syncForm(); const p = photos.splice(idx, 1); photos.unshift(p[0]); photosChanged=true; render(); }
+function navGallery(dir) { const n = pubDetailItem ? getPhotos(pubDetailItem).length : 1; galleryIdx = ((galleryIdx + dir) % n + n) % n; render(); }
+
+function sortItems(v) {
+  if (v==='profit') items.sort((a,b) => calcP(b)-calcP(a));
+  else if (v==='paid') items.sort((a,b) => (b.paid||0)-(a.paid||0));
+  else if (v==='ask') items.sort((a,b) => (b.ask||0)-(a.ask||0));
+  else if (v==='name') items.sort((a,b) => a.name.localeCompare(b.name));
+  else items.sort((a,b) => parseInt(b.id||0)-parseInt(a.id||0));
+  render();
+}
+
+function showToast(msg) {
+  document.getElementById('tw').innerHTML = '<div class="toast">'+msg+'</div>';
+  setTimeout(() => { document.getElementById('tw').innerHTML = ''; }, 3200);
+}
+
+function openPubDetail(id) {
+  pubDetailItem = items.find(i=>String(i.id)===String(id)) || null;
+  galleryIdx = 0;
+  render();
+}
+function closePubDetail() { pubDetailItem=null; render(); }
+
+// ─── EXPORT ───────────────────────────────────────────────────────────────────
+function exportExcel() {
+  if (!items.length) { showToast('No items to export'); return; }
+  const rows = items.map(it => ({
+    'Name':it.name, 'Brand':it.brand, 'Category':it.category, 'Type':it.type,
+    'Status':it.status, 'Paid €':it.paid||0, 'Ask €':it.ask||0,
+    'Sold €':it.final||0, 'Profit/Loss €':calcP(it), 'Notes':it.notes||''
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[{wch:22},{wch:12},{wch:14},{wch:18},{wch:11},{wch:8},{wch:8},{wch:8},{wch:13},{wch:25}];
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,'Inventory',ws);
+  const s = stats();
+  const ws2 = XLSX.utils.json_to_sheet([
+    {M:'Total items',V:s.n},{M:'Sold',V:s.sold},{M:'Available',V:s.avail},
+    {M:'Giveaway',V:s.give},{M:'Reserved',V:s.res},
+    {M:'Invested €',V:Math.round(s.inv)},{M:'Revenue €',V:Math.round(s.rev)},
+    {M:'Net Profit €',V:Math.round(s.pro)},{M:'Potential €',V:Math.round(s.pot)},
+  ]);
+  XLSX.utils.book_append_sheet(wb,'Summary',ws2);
+  XLSX.writeFile(wb,'resale-tracker-'+new Date().toISOString().slice(0,10)+'.xlsx');
+  showToast('Excel downloaded ✓');
+}
+
+// ─── CHART HELPERS ────────────────────────────────────────────────────────────
+function renderDonut(s) {
+  const total = s.n||1;
+  const segs = [{v:s.sold,c:'#3ddc84'},{v:s.avail,c:'#7eb8f7'},{v:s.give,c:'#f5a623'},{v:s.res,c:'#7eb8f7'}];
+  const r=42, circ=2*Math.PI*r; let offset=0, paths='';
+  [{v:s.sold,c:'#3ddc84'},{v:s.avail,c:'#7eb8f7'},{v:s.give,c:'#f5a623'}].forEach(seg => {
+    const dash=(seg.v/total)*circ, gap=circ-dash;
+    paths += '<circle cx="60" cy="60" r="'+r+'" fill="none" stroke="'+seg.c+'" stroke-width="14" stroke-dasharray="'+dash.toFixed(2)+' '+gap.toFixed(2)+'" stroke-dashoffset="'+(-offset*circ).toFixed(2)+'" transform="rotate(-90 60 60)" opacity="0.9"/>';
+    offset += seg.v/total;
+  });
+  const pct = s.n ? Math.round(s.sold/s.n*100) : 0;
+  const tc = darkMode ? '#e0e0ee' : '#1c1814';
+  const mc = darkMode ? '#555577' : '#7a7060';
+  paths += '<text x="60" y="56" text-anchor="middle" font-family="Syne,sans-serif" font-size="16" font-weight="800" fill="'+tc+'">'+pct+'%</text>';
+  paths += '<text x="60" y="70" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="'+mc+'">sold</text>';
+  return paths;
+}
+function renderCatBars(s) {
+  const cats = Object.entries(s.catProfit).sort((a,b)=>b[1]-a[1]);
+  if (!cats.length) return '<div style="color:var(--muted);font-size:11px;font-family:\'DM Mono\',monospace;padding:1rem 0;text-align:center">no sold items yet</div>';
+  const mx = Math.max(...cats.map(c=>Math.abs(c[1])),1);
+  return cats.map(([cat,val]) => {
+    const pct=(Math.abs(val)/mx*100).toFixed(1), pos=val>=0;
+    return '<div class="bc-row"><div class="bc-lbl">'+cat+'</div><div class="bc-track"><div class="bc-fill" style="width:'+pct+'%;background:'+(pos?'var(--green)':'var(--red)')+'"></div></div><div class="bc-val '+(pos?'pos':'neg')+'">'+(pos?'+':'')+fc(val)+'</div></div>';
+  }).join('');
+}
+function renderFinRows(s) {
+  const margin = s.rev>0 ? Math.round(s.pro/s.rev*100) : 0;
+  return [
+    {l:'Total invested', v:'€'+Math.round(s.inv), c:'b', s:''},
+    {l:'Total revenue',  v:'€'+Math.round(s.rev), c:'',  s:'from '+s.sold+' sold items'},
+    {l:'Net profit',     v:(s.pro>=0?'+':'')+'€'+Math.round(s.pro), c:s.pro>=0?'g':'r', s:'margin: '+margin+'%'},
+    {l:'Potential',      v:'€'+Math.round(s.pot), c:'a', s:s.avail+' items unsold'},
+  ].map(r => '<div class="fin-row"><div><div class="fin-row-lbl">'+r.l+'</div>'+(r.s?'<div class="fin-margin">'+r.s+'</div>':'')+'</div><div class="fin-row-val '+r.c+'">'+r.v+'</div></div>').join('');
+}
+function renderTopEarners() {
+  const sold = items.filter(i=>i.status==='sold').map(i=>({...i,p:calcP(i)})).sort((a,b)=>b.p-a.p).slice(0,5);
+  if (!sold.length) return '<div style="color:var(--muted);font-size:11px;font-family:\'DM Mono\',monospace">no sold items yet</div>';
+  return sold.map((it,i) => '<div class="top-item"><div class="top-rank">'+['🥇','🥈','🥉','4.','5.'][i]+'</div><div class="top-name">'+it.name+'</div><div class="top-cat">'+it.category+'</div><div class="top-profit '+(it.p>=0?'pos':'neg')+'">'+(it.p>=0?'+':'')+fc(it.p)+'</div></div>').join('');
+}
+
+// ─── ANALYSIS BOX ─────────────────────────────────────────────────────────────
+function renderAnalysis() {
+  const pN=parseFloat(form.paid)||0, aN=parseFloat(form.ask)||0, fN=parseFloat(form.final)||0;
+  if (!pN && !aN && !fN) return '<div style="text-align:center;padding:1.2rem;color:var(--muted);font-size:11px;font-family:\'DM Mono\',monospace">enter prices above to see breakdown</div>';
+  const mx=Math.max(pN,aN,fN,1), pct=v=>((v/mx)*100).toFixed(1);
+  const pr=calcP(form), pp=pr>0, pz=pr===0;
+  return '<div class="analysis"><div class="a-hd">price breakdown</div>'
+    +'<div class="a-row"><div class="a-meta"><span>Buy price</span><span>'+fc(pN)+'</span></div><div class="a-track"><div class="a-fill fp-paid" style="width:'+pct(pN)+'%"></div></div></div>'
+    +'<div class="a-row"><div class="a-meta"><span>Ask price</span><span>'+fc(aN)+'</span></div><div class="a-track"><div class="a-fill fp-ask" style="width:'+pct(aN)+'%"></div></div></div>'
+    +'<div class="a-row"><div class="a-meta"><span>Sold price</span><span>'+fc(fN)+'</span></div><div class="a-track"><div class="a-fill fp-final" style="width:'+pct(fN)+'%"></div></div></div>'
+    +'<div class="a-bot"><span class="a-bot-l">Net result</span><div style="display:flex;align-items:center;gap:10px">'
+    +'<span class="profit-badge '+(pp?'pb-pos':pz?'pb-zero':'pb-neg')+'">'+(pp?'▲ profit':pz?'■ break even':'▼ loss')+'</span>'
+    +'<span class="a-bot-v" style="color:'+(pp?'var(--green)':pz?'var(--muted)':'var(--red)')+'">'+(pp?'+':'')+fc(pr)+'</span>'
+    +'</div></div></div>';
+}
+
+// ─── ITEM WINDOW ──────────────────────────────────────────────────────────────
+function renderItemWindow() {
+  if (!winOpen) return '';
+  const isEdit = winMode === 'edit';
+  // Build photo upload panel
+  const coverPhoto = photos.length ? photos[0] : null;
+  const imgSection = (coverPhoto
+    ? '<img src="'+coverPhoto+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">'
+    : '<label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:2rem;text-align:center;width:100%;height:100%;position:relative"><svg viewBox="0 0 24 24" style="width:40px;height:40px;fill:none;stroke:var(--border2);stroke-width:1;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><p style="font-size:13px;color:var(--muted);font-weight:600">Tap to add photos</p><small style="font-size:10px;color:var(--muted)">Camera or Gallery · up to 6</small><input type="file" accept="image/*" multiple data-photo-input="1" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer"></label>'
+  ) + (photos.length > 1 ? '<div class="photo-count-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg> '+photos.length+'</div>' : '');
+  // Build thumbnail strip
+  const thumbStrip = '<div class="photo-strip">'
+    + photos.map((p, i) =>
+        '<div class="photo-thumb'+(i===0?' cover-thumb':'')+'" onclick="setCover('+i+')">'
+        +'<img src="'+p+'" alt="">'
+        +'<button class="photo-thumb-remove" onclick="event.stopPropagation();removePhoto('+i+')">×</button>'
+        +(i===0?'<div class="photo-thumb-cover">COVER</div>':'')
+        +'</div>'
+      ).join('')
+    + (photos.length < 6
+        ? '<label class="photo-add-btn"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add photo</span><input type="file" accept="image/*" multiple data-photo-input="1" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer"></label>'
+        : '')
+    + '</div>';
+  const catOpts  = CATS.map(c  => '<option value="'+c+'"'+(form.category===c?' selected':'')+'>'+c+'</option>').join('');
+  const typeOpts = TYPES.map(t => '<option value="'+t+'"'+(form.type===t?' selected':'')+'>'+t+'</option>').join('');
+  const visOn = form.visible !== false;
+
+  return '<div class="item-window"><div class="iw-inner">'
+    // LEFT — photo + thumbnails
+    +'<div class="iw-left">'
+    +'<div class="iw-img-area" style="position:relative">'+imgSection+'</div>'
+    +'<div class="iw-preview-bar">'
+    +'<div class="iw-preview-name" id="prev-name">'+(form.name||'New item')+'</div>'
+    +'<div class="iw-preview-sub">'+(form.brand||'no brand')+' · '+form.category+'</div>'
+    + thumbStrip
+    +'</div></div>'
+    // RIGHT — form
+    +'<div class="iw-right">'
+    +'<div class="iw-top"><h2>'+(isEdit?'Edit item':'Add new item')+'</h2>'
+    +'<button class="iw-close" onclick="closeWin()">×</button></div>'
+    +'<div class="iw-body">'
+
+    // Details — text inputs DO NOT call render(), just update form in memory
+    +'<div class="iw-section"><div class="iw-section-title">Item details</div>'
+    +'<div class="frow2">'
+    +'<div class="fg"><label class="fl">Item name *</label>'
+    +'<input id="fi-name" class="fi" type="text" value="'+esc(form.name)+'" placeholder="e.g. Router" oninput="form.name=this.value;upPrev()"></div>'
+    +'<div class="fg"><label class="fl">Brand</label>'
+    +'<input id="fi-brand" class="fi" type="text" value="'+esc(form.brand)+'" placeholder="e.g. HP" oninput="form.brand=this.value"></div>'
+    +'</div>'
+    +'<div class="frow2">'
+    +'<div class="fg"><label class="fl">Category</label><select id="fi-cat" class="fi" onchange="form.category=this.value">'+catOpts+'</select></div>'
+    +'<div class="fg"><label class="fl">Type</label><select id="fi-type" class="fi" onchange="form.type=this.value">'+typeOpts+'</select></div>'
+    +'</div>'
+    +'<div class="fg"><label class="fl">Notes / condition</label>'
+    +'<input id="fi-notes" class="fi" type="text" value="'+esc(form.notes)+'" placeholder="Good condition, minor scratches..." oninput="form.notes=this.value"></div>'
+    +'</div>'
+
+    // Pricing — updates analysis box only, not full render
+    +'<div class="iw-section"><div class="iw-section-title">Pricing</div>'
+    +'<div class="frow3">'
+    +'<div class="fg"><label class="fl">Buy price (€)</label><input id="fi-paid" class="fi" type="number" min="0" value="'+esc(form.paid)+'" placeholder="0" oninput="form.paid=this.value;updateAnalysisBox()"></div>'
+    +'<div class="fg"><label class="fl">Ask price (€)</label><input id="fi-ask" class="fi" type="number" min="0" value="'+esc(form.ask)+'" placeholder="0" oninput="form.ask=this.value;updateAnalysisBox()"></div>'
+    +'<div class="fg"><label class="fl">Sold price (€)</label><input id="fi-final" class="fi" type="number" min="0" value="'+esc(form.final)+'" placeholder="0" oninput="form.final=this.value;updateAnalysisBox()"></div>'
+    +'</div><div id="analysis-box">'+renderAnalysis()+'</div></div>'
+
+    // Status — uses setStatus() which calls syncForm first
+    +'<div class="iw-section"><div class="iw-section-title">Status</div>'
+    +'<div class="schips">'
+    +'<div class="sc sc-a'+(form.status==='available'?' sel':'')+'" onclick="setStatus(\'available\')"><div style="font-size:18px;margin-bottom:4px">●</div>Available</div>'
+    +'<div class="sc sc-s'+(form.status==='sold'?' sel':'')+'" onclick="setStatus(\'sold\')"><div style="font-size:18px;margin-bottom:4px">●</div>Sold</div>'
+    +'<div class="sc sc-g'+(form.status==='giveaway'?' sel':'')+'" onclick="setStatus(\'giveaway\')"><div style="font-size:18px;margin-bottom:4px">●</div>Giveaway</div>'
+    +'<div class="sc sc-r'+(form.status==='reserved'?' sel':'')+'" onclick="setStatus(\'reserved\')"><div style="font-size:18px;margin-bottom:4px">●</div>Reserved</div>'
+    +'</div></div>'
+
+    // Visibility
+    +'<div class="iw-section"><div class="iw-section-title">Visibility on public page</div>'
+    +'<div class="vis-toggle" onclick="toggleVis()">'
+    +(visOn
+      ? '<svg style="width:16px;height:16px;flex-shrink:0;fill:none;stroke:var(--green);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+      : '<svg style="width:16px;height:16px;flex-shrink:0;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>')
+    +'<div style="flex:1"><div class="vis-label">'+(visOn?'Visible on public page':'Hidden from public page')+'</div>'
+    +'<div class="vis-hint">'+(visOn?'Buyers can see this item':'Only you see it in admin')+'</div></div>'
+    +'<div class="vis-track'+(visOn?' on':'')+'" style="flex-shrink:0"><div class="vis-thumb"></div></div>'
+    +'</div></div>'
+
+    +'<div class="iw-footer">'+(isEdit?'<button class="btn-del" onclick="del()">Delete</button>':'')
+    +'<button class="btn-can" onclick="closeWin()">Cancel</button>'
+    +'<button class="btn-sv" onclick="save()" '+(saving?'disabled':'')+'>'+(saving?'<span class="spin-small"></span> Saving…':'Save item →')+'</button>'
+    +'</div></div></div></div>';
+}
+
+function esc(v) { return String(v||'').replace(/"/g,'&quot;'); }
+function upPrev() { const el=document.getElementById('prev-name'); if(el) el.textContent=form.name||'New item'; }
+function updateAnalysisBox() {
+  form.paid  = document.getElementById('fi-paid')?.value  || form.paid;
+  form.ask   = document.getElementById('fi-ask')?.value   || form.ask;
+  form.final = document.getElementById('fi-final')?.value || form.final;
+  const el = document.getElementById('analysis-box');
+  if (el) el.innerHTML = renderAnalysis();
+}
+
+// ─── PUBLIC DETAIL MODAL ──────────────────────────────────────────────────────
+function renderPubDetailModal(it) {
+  const isDull = it.status==='sold'||it.status==='giveaway';
+  const isRes  = it.status==='reserved';
+  const fs = isDull?'filter:grayscale(65%) brightness(0.7)':isRes?'filter:grayscale(40%) brightness(0.8)':'';
+  const itemPhotos = getPhotos(it);
+  const gIdx = Math.min(galleryIdx, Math.max(0, itemPhotos.length - 1));
+  const showArrows = itemPhotos.length > 1;
+
+  // Build gallery — all photos stacked, current one visible
+  const galleryImgs = itemPhotos.length
+    ? itemPhotos.map((p, i) => {
+        const filterStyle = fs ? fs+';' : '';
+        const opacityStyle = i===gIdx ? 'opacity:1;' : 'opacity:0;pointer-events:none;';
+        return '<img src="'+p+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity 0.3s;'+filterStyle+opacityStyle+'">';
+      }).join('')
+    : '<div class="pub-modal-img-ph"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>';
+
+  const arrows = showArrows
+    ? '<button class="gallery-arrow left" data-nav="-1">‹</button>'
+      + '<button class="gallery-arrow right" data-nav="1">›</button>'
+    : '';
+  const dots = showArrows
+    ? '<div class="gallery-dots">'+itemPhotos.map((_,i) => '<div class="gallery-dot'+(i===gIdx?' active':'')+'" data-dotidx="'+i+'"></div>').join('')+'</div>'
+    : '';
+
+  const bigStamp = {
+    sold:     '<div class="gallery-stamp-wrap" style="background:rgba(10,10,11,0.52)"><div class="stamp stamp-sold" style="font-size:26px;padding:8px 18px">SOLD</div></div>',
+    giveaway: '<div class="gallery-stamp-wrap" style="background:rgba(10,10,11,0.42)"><div class="stamp stamp-give" style="font-size:26px;padding:8px 18px">FREE</div></div>',
+    reserved: '<div class="gallery-stamp-wrap" style="background:rgba(10,10,11,0.42)"><div class="stamp stamp-reserved" style="font-size:18px;padding:6px 14px">RESERVED</div></div>',
+  }[it.status] || '';
+  const sColors = {
+    available: 'color:var(--green);background:rgba(61,220,132,0.12);border:1px solid rgba(61,220,132,0.25)',
+    sold:      'color:var(--red);background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.25)',
+    reserved:  'color:var(--blue);background:rgba(126,184,247,0.12);border:1px solid rgba(126,184,247,0.25)',
+    giveaway:  'color:var(--amber);background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.25)',
+  };
+  const sLabel = {available:'● Available',sold:'● Sold',reserved:'● Reserved',giveaway:'● Giveaway'}[it.status]||'● Available';
+  let priceHtml = '';
+  if (it.status==='available'&&it.ask) priceHtml='<div class="pub-modal-price-box"><span class="pub-modal-price-lbl">Asking price</span><span class="pub-modal-price-val">'+fc(it.ask)+'</span></div>';
+  else if (it.status==='sold') priceHtml='<div class="pub-modal-price-box"><span class="pub-modal-price-lbl">Status</span><span style="font-size:18px;font-weight:800;color:var(--red)">Sold ✓</span></div>';
+  else if (it.status==='reserved') priceHtml='<div class="pub-modal-price-box"><span class="pub-modal-price-lbl">Status</span><span style="font-size:18px;font-weight:800;color:var(--blue)">Reserved 🔒</span></div>';
+  else if (it.status==='giveaway') priceHtml='<div class="pub-modal-price-box"><span class="pub-modal-price-lbl">Price</span><span style="font-size:18px;font-weight:800;color:var(--amber)">Free 🎁</span></div>';
+  const ctaBtn = it.status!=='sold'
+    ? '<button class="pub-modal-cta"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l1-1.06a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z"/></svg>Interested? Contact seller</button>'
+    : '';
+  return '<div class="pub-modal-backdrop" onclick="if(event.target.classList.contains(\"pub-modal-backdrop\"))closePubDetail()">'
+    +'<div class="pub-modal">'
+    +'<div class="gallery-wrap">'+galleryImgs+arrows+dots+bigStamp+'</div>'
+    +'<div class="pub-modal-body">'
+    +'<div class="pub-modal-top"><div class="pub-modal-name">'+it.name+'</div><button class="pub-modal-close" onclick="closePubDetail()">×</button></div>'
+    +'<div class="pub-modal-tags">'
+    +(it.brand?'<span class="pub-modal-tag">'+it.brand+'</span>':'')
+    +'<span class="pub-modal-tag">'+it.category+'</span>'
+    +'<span class="pub-modal-tag">'+it.type+'</span>'
+    +'<span class="pub-modal-status-tag" style="'+(sColors[it.status]||sColors.available)+'">'+sLabel+'</span>'
+    +'</div>'
+    +(it.notes?'<div class="pub-modal-notes">'+it.notes+'</div>':'')
+    +priceHtml+ctaBtn
+    +'</div></div></div>';
+}
+
+// ─── SHARED CARD HELPERS ──────────────────────────────────────────────────────
+function stampHtml(status, big) {
+  const size = big ? 'font-size:26px;padding:8px 18px' : '';
+  if (status==='sold')     return '<div class="stamp-overlay ov-sold"><div class="stamp stamp-sold" style="'+size+'">SOLD</div></div>';
+  if (status==='giveaway') return '<div class="stamp-overlay ov-give"><div class="stamp stamp-give" style="'+size+'">FREE</div></div>';
+  if (status==='reserved') return '<div class="stamp-overlay ov-reserved"><div class="stamp stamp-reserved" style="font-size:'+(big?'18':'14')+'px;padding:5px 12px">RESERVED</div></div>';
+  return '';
+}
+function dullStyle(status) {
+  if (status==='sold'||status==='giveaway') return 'filter:grayscale(65%) brightness(0.7)';
+  if (status==='reserved') return 'filter:grayscale(40%) brightness(0.8)';
+  return '';
+}
+
+// ─── RENDER LOGIN ─────────────────────────────────────────────────────────────
+function renderLogin() {
+  return '<div class="login-screen"><div class="login-card">'
+    +'<div class="login-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>'
+    +'<div class="login-title">Admin Access</div>'
+    +'<div class="login-sub">resale tracker · private dashboard</div>'
+    +'<div class="login-field"><label>Password</label>'
+    +'<div style="position:relative">'
+    +'<input id="pw-input" class="login-input" type="'+(pwVisible?'text':'password')+'" placeholder="Enter your password" onkeydown="handleLoginKey(event)" autofocus>'
+    +'<button onclick="togglePw()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;font-family:\'DM Mono\',monospace">'+(pwVisible?'hide':'show')+'</button>'
+    +'</div></div>'
+    +'<button class="login-btn" onclick="doLogin()">Unlock →</button>'
+    +'<div class="login-err">'+loginErr+'</div>'
+    +'<div class="login-footer">admin access only · your data stays private</div>'
+    +'</div></div>';
+}
+
+// ─── RENDER PUBLIC ────────────────────────────────────────────────────────────
+function renderPublic() {
+  const s = stats(), list = shown(true);
+  const cats = ['all', ...new Set(items.filter(i=>i.visible!==false).map(i=>i.category))];
+  const themeBtn = darkMode
+    ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Light</span>'
+    : '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span>Dark</span>';
+
+  let html = '<div class="nav">'
+    +'<div class="nav-left"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>'
+    +'<div><div class="nav-title">Items for Sale</div><div class="nav-sub">Munich · moving out sale</div></div></div>'
+    +'<div class="nav-right"><button class="ibtn" onclick="toggleTheme()">'+themeBtn+'</button></div>'
+    +'</div>';
+
+  if (loading) {
+    html += '<div class="loading-screen"><div class="spinner"></div><p>Loading items…</p></div>';
+    return html;
+  }
+
+  html += '<div class="pub-hero">'
+    +'<div class="pub-hero-ey"><span class="hdot"></span>items available now</div>'
+    +'<h1 class="pub-hero-h">Moving out.<br><em>Everything must go.</em></h1>'
+    +'<p class="pub-hero-sub">Browse items below. Interested? Click any item to contact.</p>'
+    +'<div class="pub-stats">'
+    +'<div class="pub-stat"><div class="pub-stat-v b">'+s.avail+'</div><div class="pub-stat-l">Available</div></div>'
+    +'<div class="pub-stat-div"></div>'
+    +'<div class="pub-stat"><div class="pub-stat-v g">'+s.sold+'</div><div class="pub-stat-l">Sold</div></div>'
+    +'<div class="pub-stat-div"></div>'
+    +'<div class="pub-stat"><div class="pub-stat-v" style="color:var(--blue)">'+s.res+'</div><div class="pub-stat-l">Reserved</div></div>'
+    +'<div class="pub-stat-div"></div>'
+    +'<div class="pub-stat"><div class="pub-stat-v a">'+s.give+'</div><div class="pub-stat-l">Giveaway</div></div>'
+    +'</div></div>';
+
+  const sPills = ['all','available','sold','reserved','giveaway'].map(f2 =>
+    '<div class="fp'+(filter===f2?' on':'')+'" onclick="filter=\''+f2+'\';render()">'+(f2==='all'?'All':f2[0].toUpperCase()+f2.slice(1))+'</div>'
+  ).join('');
+  const cPills = cats.map(c =>
+    '<div class="fp'+(catFilter===c?' on':'')+'" onclick="catFilter=\''+c+'\';render()">'+(c==='all'?'All cats':c)+'</div>'
+  ).join('');
+
+  html += '<div class="toolbar">'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+    +'<div class="fpills">'+sPills+'</div>'
+    +'<div class="fpills">'+cPills+'</div></div>'
+    +'<div class="tb-right"><input class="search-in" type="text" placeholder="Search…" value="'+esc(searchQ)+'" oninput="searchQ=this.value;render()"></div>'
+    +'</div>';
+
+  html += '<div class="pub-grid">';
+  if (!list.length) {
+    html += '<div class="empty" style="grid-column:1/-1"><div class="ering"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/></svg></div><h3>No items found</h3><p>Try a different filter.</p></div>';
+  } else {
+    list.forEach((it,i) => {
+      const bcls = {sold:'pb-s',available:'pb-a',giveaway:'pb-g',reserved:'pb-r'}[it.status]||'pb-a';
+      const blbl = {sold:'● Sold',available:'● Available',giveaway:'● Giveaway',reserved:'● Reserved'}[it.status]||'● Available';
+      const pcls = {sold:'pc-sold',available:'pc-avail',giveaway:'pc-give',reserved:'pc-reserved'}[it.status]||'pc-avail';
+      const ds = dullStyle(it.status);
+      const cover = getCover(it);
+      const pc = getPhotos(it).length;
+      const imgH = cover
+        ? '<img src="'+cover+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 0.3s'+(ds?';'+ds:'')+'">'
+        : '<div class="pub-card-ph"'+(ds?' style="'+ds+'"':'')+"><div class='pub-card-ph-icon'><svg viewBox='0 0 24 24'><rect x='3' y='3' width='18' height='18' rx='2'/><circle cx='8.5' cy='8.5' r='1.5'/><path d='m21 15-5-5L5 21'/></svg></div></div>";
+      const multiPhotoBadge = pc > 1 ? '<div class="photo-count-badge">📷 '+pc+'</div>' : '';
+      let priceBlock = '';
+      if (it.status==='available'&&it.ask) priceBlock='<div class="pub-price-row"><div class="pub-price-lbl">Asking</div><div class="pub-price-val">'+fc(it.ask)+'</div></div>';
+      else if (it.status==='sold') priceBlock='<div class="pub-price-row"><div class="pub-price-lbl">Status</div><div class="pub-price-sold">Sold ✓</div></div>';
+      else if (it.status==='reserved') priceBlock='<div class="pub-price-row"><div class="pub-price-lbl">Status</div><div class="pub-price-reserved">Reserved 🔒</div></div>';
+      else if (it.status==='giveaway') priceBlock='<div class="pub-price-row"><div class="pub-price-lbl">Price</div><div class="pub-price-give">Free 🎁</div></div>';
+
+      html += '<div class="pub-card '+pcls+'" data-pubid="'+it.id+'" style="cursor:pointer;animation-delay:'+Math.min(i,20)*0.025+'s">'
+        +'<div class="pub-card-img">'+imgH+'<div class="pub-card-scrim"></div>'+stampHtml(it.status,false)+multiPhotoBadge
+        +'<span class="pub-badge '+bcls+'">'+blbl+'</span>'
+        +'<span class="pub-cat-tag">'+it.category+'</span></div>'
+        +'<div class="pub-card-body"><div class="pub-card-name">'+it.name+'</div>'
+        +'<div class="pub-card-brand">'+(it.brand||it.type)+'</div>'+priceBlock+'</div></div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
+// ─── RENDER ADMIN ─────────────────────────────────────────────────────────────
+function renderAdmin() {
+  const s = stats(), list = shown(false);
+  const pp = s.pro >= 0;
+  const cats = ['all', ...new Set(items.map(i=>i.category))];
+  const themeBtn = darkMode
+    ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Light</span>'
+    : '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span>Dark</span>';
+
+  let html = '<div class="nav">'
+    +'<div class="nav-left"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>'
+    +'<div><div class="nav-title">Resale Tracker</div><div class="nav-sub">admin dashboard</div></div></div>'
+    +'<div class="nav-right">'
+    +'<button class="ibtn" onclick="exportExcel()"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Export</span></button>'
+    +'<button class="ibtn" onclick="toggleTheme()">'+themeBtn+'</button>'
+    +'<button class="btn-logout" onclick="doLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</button>'
+    +'<button class="btn-add" onclick="openAdd()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add item</button>'
+    +'</div></div>';
+
+  if (loading) {
+    html += '<div class="loading-screen"><div class="spinner"></div><p>Loading from Google Sheets…</p></div>';
+    return html;
+  }
+
+  html += '<div class="hero"><div class="hero-ey"><span class="hdot"></span>your inventory · '+s.n+' items total</div><h1 class="hero-h">Your resale <em>empire.</em></h1></div>';
+
+  const sp = s.n?Math.round(s.sold/s.n*100):0, ap=s.n?Math.round(s.avail/s.n*100):0, gp=s.n?Math.round(s.give/s.n*100):0, rp=s.n?Math.round(s.res/s.n*100):0;
+  html += '<div class="kpi8-grid">'
+    +'<div class="kpi8"><div class="kpi8-lbl">Total items</div><div class="kpi8-v">'+s.n+'</div><div class="kpi8-bar"><div class="kpi8-bar-fill" style="width:100%;background:var(--muted)"></div></div></div>'
+    +'<div class="kpi8"><div class="kpi8-lbl">Sold</div><div class="kpi8-v g">'+s.sold+'</div><div class="kpi8-bar"><div class="kpi8-bar-fill" style="width:'+sp+'%;background:var(--green)"></div></div><div class="kpi8-s">'+sp+'% of total</div></div>'
+    +'<div class="kpi8"><div class="kpi8-lbl">In inventory</div><div class="kpi8-v b">'+s.avail+'</div><div class="kpi8-bar"><div class="kpi8-bar-fill" style="width:'+ap+'%;background:var(--blue)"></div></div><div class="kpi8-s">'+ap+'% of total</div></div>'
+    +'<div class="kpi8"><div class="kpi8-lbl">Giveaway</div><div class="kpi8-v a">'+s.give+'</div><div class="kpi8-bar"><div class="kpi8-bar-fill" style="width:'+gp+'%;background:var(--amber)"></div></div><div class="kpi8-s">'+gp+'% of total</div></div>'
+    +'<div class="kpi8"><div class="kpi8-lbl">Reserved</div><div class="kpi8-v b">'+s.res+'</div><div class="kpi8-bar"><div class="kpi8-bar-fill" style="width:'+rp+'%;background:var(--blue)"></div></div><div class="kpi8-s">'+rp+'% of total</div></div>'
+    +'<div class="kpi8"><div class="kpi8-lbl">Invested</div><div class="kpi8-v b">€'+Math.round(s.inv)+'</div><div class="kpi8-s">cost basis</div></div>'
+    +'<div class="kpi8"><div class="kpi8-lbl">Revenue</div><div class="kpi8-v">€'+Math.round(s.rev)+'</div><div class="kpi8-s">from sold items</div></div>'
+    +'<div class="kpi8"><div class="kpi8-lbl">Net profit</div><div class="kpi8-v '+(pp?'g':'r')+'">'+(pp?'+':'')+'€'+Math.round(s.pro)+'</div><div class="kpi8-s">'+(pp?'↑ up':'↓ in the red')+'</div></div>'
+    +'<div class="kpi8"><div class="kpi8-lbl">Potential</div><div class="kpi8-v a">€'+Math.round(s.pot)+'</div><div class="kpi8-s">'+s.avail+' items at ask</div></div>'
+    +'</div>';
+
+  html += '<div class="analytics-section"><div class="analytics-header"><div class="analytics-title">Analytics</div><div class="analytics-sub">resale performance overview</div></div>'
+    +'<div class="analytics-grid">'
+    +'<div class="chart-card"><div class="chart-card-title">Status breakdown</div><div class="donut-wrap"><svg viewBox="0 0 120 120" class="donut-svg">'+renderDonut(s)+'</svg>'
+    +'<div class="donut-legend"><div class="dl-item"><span class="dl-dot" style="background:var(--green)"></span><span class="dl-lbl">Sold</span><span class="dl-val">'+s.sold+'</span></div>'
+    +'<div class="dl-item"><span class="dl-dot" style="background:var(--blue)"></span><span class="dl-lbl">In stock</span><span class="dl-val">'+s.avail+'</span></div>'
+    +'<div class="dl-item"><span class="dl-dot" style="background:var(--amber)"></span><span class="dl-lbl">Giveaway</span><span class="dl-val">'+s.give+'</span></div>'
+    +'<div class="dl-item"><span class="dl-dot" style="background:var(--blue)"></span><span class="dl-lbl">Reserved</span><span class="dl-val">'+s.res+'</span></div>'
+    +'</div></div></div>'
+    +'<div class="chart-card"><div class="chart-card-title">Profit by category</div><div class="bar-chart-wrap">'+renderCatBars(s)+'</div></div>'
+    +'<div class="chart-card"><div class="chart-card-title">Financial summary</div><div class="fin-rows">'+renderFinRows(s)+'</div></div>'
+    +'<div class="chart-card"><div class="chart-card-title">Top 5 earners</div><div class="top-list">'+renderTopEarners()+'</div></div>'
+    +'</div></div>';
+
+  const sPills = ['all','available','sold','reserved','giveaway'].map(f2=>
+    '<div class="fp'+(filter===f2?' on':'')+'" onclick="filter=\''+f2+'\';render()">'+(f2==='all'?'All':f2[0].toUpperCase()+f2.slice(1))+'</div>'
+  ).join('');
+  const cPills = cats.map(c=>
+    '<div class="fp'+(catFilter===c?' on':'')+'" onclick="catFilter=\''+c+'\';render()">'+(c==='all'?'All cats':c)+'</div>'
+  ).join('');
+
+  html += '<div class="toolbar"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+    +'<div class="fpills">'+sPills+'</div><div class="fpills">'+cPills+'</div></div>'
+    +'<div class="tb-right"><input class="search-in" type="text" placeholder="Search…" value="'+esc(searchQ)+'" oninput="searchQ=this.value;render()">'
+    +'<select class="sort-sel" onchange="sortItems(this.value)"><option value="new">Newest</option><option value="name">A–Z</option><option value="profit">Profit ↓</option><option value="ask">Ask ↓</option><option value="paid">Cost ↓</option></select>'
+    +'</div></div>';
+
+  html += '<div class="items-grid">';
+  if (!list.length) {
+    html += '<div class="empty"><div class="ering"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h3>No items found</h3><p>Try a different filter.</p></div>';
+  } else {
+    list.forEach((it,i) => {
+      const p=calcP(it), pp=p>0;
+      const bcls={sold:'cb-s',available:'cb-a',giveaway:'cb-g',reserved:'cb-r'}[it.status]||'cb-a';
+      const blbl={sold:'● Sold',available:'● Available',giveaway:'● Giveaway',reserved:'● Reserved'}[it.status]||'● Available';
+      const scls={sold:'sold-card',available:'avail-card',giveaway:'give-card',reserved:'reserved-card'}[it.status]||'avail-card';
+      const hidden = it.visible===false;
+      const ds = dullStyle(it.status);
+      const adminCover = getCover(it);
+      const adminPc = getPhotos(it).length;
+      const imgH = adminCover
+        ? '<img src="'+adminCover+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 0.3s'+(ds?';'+ds:'')+'">'
+        : '<div class="card-img-ph"'+(ds?' style="'+ds+'"':'')+"><div class='card-ph-icon'><svg viewBox='0 0 24 24'><rect x='3' y='3' width='18' height='18' rx='2'/><circle cx='8.5' cy='8.5' r='1.5'/><path d='m21 15-5-5L5 21'/></svg></div></div>";
+      const adminMultiBadge = adminPc > 1 ? '<div class="photo-count-badge">📷 '+adminPc+'</div>' : '';
+      const hasP = it.paid||it.final||it.ask;
+      const priceBlock = hasP
+        ? '<div class="card-prices"><div class="cp"><div class="cp-l">Paid</div><div class="cp-v nu">'+fc(it.paid)+'</div></div><div class="cp-dv"></div><div class="cp"><div class="cp-l">Ask</div><div class="cp-v nd">'+fc(it.ask)+'</div></div><div class="cp-dv"></div><div class="cp"><div class="cp-l">P&L</div><div class="cp-v '+(it.status==='sold'?(pp?'pos':p<0?'neg':'nu'):'nu')+'">'+(it.status==='sold'?(pp?'+':'')+fc(p):'—')+'</div></div></div>'
+        : '<div class="no-p"><span>no prices added</span></div>';
+      html += '<div class="card '+scls+(hidden?' card-dimmed':'')+'" data-editid="'+it.id+'" style="cursor:pointer;animation-delay:'+Math.min(i,20)*0.025+'s">'
+        +'<div class="card-img-wrap">'+imgH+'<div class="card-scrim"></div>'+stampHtml(it.status,false)+adminMultiBadge
+        +'<span class="cbadge '+bcls+'">'+blbl+'</span>'
+        +'<span class="card-cat-tag">'+it.category+'</span>'+(hidden?'<div class="card-hidden-badge">Hidden</div>':'')+'</div>'
+        +'<div class="card-body"><div class="card-name">'+it.name+'</div>'
+        +'<div class="card-brand">'+(it.brand||it.type)+'</div>'+priceBlock+'</div></div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
+// ─── MAIN RENDER ──────────────────────────────────────────────────────────────
+function render() {
+  const mode = getMode();
+  const root  = document.getElementById('root');
+  const mroot = document.getElementById('modal-root');
+
+  // ── Main content ──────────────────────────────────────────────────────────
+  if (mode==='login') {
+    root.innerHTML = renderLogin();
+    setTimeout(() => { const i=document.getElementById('pw-input'); if(i) i.focus(); }, 50);
+  } else if (mode==='admin') {
+    root.innerHTML = renderAdmin();
+  } else {
+    root.innerHTML = renderPublic();
+  }
+
+  // ── Modals rendered into separate container outside #root ─────────────────
+  // This prevents modals from being destroyed when root re-renders,
+  // and fixes position:fixed clipping on iOS Safari.
+  let modalHtml = '';
+  if (winOpen) modalHtml += renderItemWindow();
+  if (pubDetailItem) modalHtml += renderPubDetailModal(pubDetailItem);
+  if (mroot) mroot.innerHTML = modalHtml;
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+
+// Single delegated event listener — handles all card clicks safely
+// Works on local files, Vercel, mobile — no inline onclick needed
+document.addEventListener('click', function(e) {
+  // Card clicks
+  const pubCard = e.target.closest('[data-pubid]');
+  if (pubCard) { openPubDetail(pubCard.dataset.pubid); return; }
+  const editCard = e.target.closest('[data-editid]');
+  if (editCard) { openEdit(editCard.dataset.editid); return; }
+  // Gallery arrow clicks
+  const navBtn = e.target.closest('[data-nav]');
+  if (navBtn) { navGallery(parseInt(navBtn.dataset.nav)); return; }
+  // Gallery dot clicks
+  const dot = e.target.closest('[data-dotidx]');
+  if (dot) { galleryIdx = parseInt(dot.dataset.dotidx); render(); return; }
+});
+
+// Delegated change listener for file inputs (photo upload)
+// More reliable than inline onchange on dynamically rendered elements
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.dataset.photoInput) {
+    onImg(e);
+  }
+});
+
+// Touch swipe for gallery on mobile
+(function() {
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    const dx = touchStartX - e.changedTouches[0].clientX;
+    const dy = touchStartY - e.changedTouches[0].clientY;
+    // Only trigger if horizontal swipe is dominant
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    const inGallery = e.target.closest('.gallery-wrap') || e.target.closest('.pub-modal');
+    if (!inGallery) return;
+    if (!pubDetailItem) return;
+    const n = getPhotos(pubDetailItem).length;
+    if (n <= 1) return;
+    navGallery(dx > 0 ? 1 : -1);
+  }, { passive: true });
+})();
+
+// Wire persistent file inputs to onImg handler
+// Done after DOM ready — these inputs live in real DOM, work on iOS/Android
+document.getElementById('pfi-single').addEventListener('change', onImg);
+document.getElementById('pfi-add').addEventListener('change', onImg);
+
+loadTheme();
+render();
+loadItems();
+
+// Auto-refresh items every 60s so public page stays in sync across devices
+setInterval(function() {
+  if (getMode() === 'public') loadItems();
+}, 60000);
+</script>
+</body>
+</html>
