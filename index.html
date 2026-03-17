@@ -410,18 +410,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 @media(max-width:900px){.analytics-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.kpi8-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ibtn span{display:none}.frow3{grid-template-columns:1fr 1fr}.pub-grid{padding:14px;gap:12px}.items-grid{padding:14px;gap:12px}}
 @media(max-width:400px){.kpi8-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.frow2{grid-template-columns:1fr}}
-#upload-btn-wrap{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:-1;opacity:0;pointer-events:none;transition:opacity 0.2s}
-body.win-open #upload-btn-wrap{z-index:500;opacity:1;pointer-events:all}
-#upload-btn-label{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;padding:14px 28px;border-radius:99px;cursor:pointer;white-space:nowrap;box-shadow:0 8px 24px rgba(99,102,241,0.5);position:relative}
-#static-file-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
-
 </style>
 
 </head>
 <body>
 <div id="root"></div>
 <div id="modal-root"></div>
-<div id="upload-btn-wrap"><label id="upload-btn-label"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Photo / Camera<input type="file" id="static-file-input" accept="image/*" multiple></label></div>
 
 
 <div class="toast-wrap" id="tw"></div>
@@ -679,17 +673,15 @@ function openAdd() {
   winMode='add'; winOpen=true;
   form = { name:'', brand:'', category:CATS[0], type:TYPES[0], status:'available', paid:'', ask:'', final:'', notes:'', visible:true };
   photos = []; photosChanged=false;
-  document.body.classList.add('win-open');
   render();
 }
 function openEdit(id) {
   const it = items.find(i => String(i.id)===String(id)); if (!it) return;
   winMode='edit'; winOpen=true;
   form = {...it}; photos = getPhotos(it).slice(); photosChanged=false;
-  document.body.classList.add('win-open');
   render();
 }
-function closeWin() { winOpen=false; document.body.classList.remove('win-open'); render(); }
+function closeWin() { winOpen=false; render(); }
 
 // Read current DOM inputs into form before any action that triggers render
 function syncForm() {
@@ -956,7 +948,7 @@ function renderItemWindow() {
         +'</div>'
       ).join('')
     + (photos.length < 6
-        ? '<div class="photo-add-btn" id="add-photo-btn"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span></div>'
+        ? '<label class="photo-add-btn" style="cursor:pointer;position:relative;overflow:hidden"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span><input type="file" accept="image/*" multiple onchange="onImg(event)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px"></label>'
         : '')
     + '</div>';
   const catOpts  = CATS.map(c  => '<option value="'+c+'"'+(form.category===c?' selected':'')+'>'+c+'</option>').join('');
@@ -1407,8 +1399,6 @@ try {
   render();
   loadItems();
   setInterval(silentRefresh, 60000);
-  var sfi = document.getElementById('static-file-input');
-  if (sfi) sfi.addEventListener('change', function(e) { onImg(e); this.value=''; });
 } catch(err) {
   document.getElementById('root').innerHTML =
     '<div style="color:#fff;padding:2rem;font-family:monospace;background:#07070f;min-height:100vh">'
