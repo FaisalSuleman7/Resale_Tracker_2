@@ -416,6 +416,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <body>
 <div id="root"></div>
 <div id="modal-root"></div>
+<input type="file" id="pfi" accept="image/*" multiple style="position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0.001;pointer-events:none;z-index:-1">
 <!-- File inputs handled inline via label elements -->
 
 <div class="toast-wrap" id="tw"></div>
@@ -731,7 +732,7 @@ async function save() {
     else items.unshift(it);
     closeWin();
     showToast(savedMode==='edit' ? 'Item updated ✓' : 'Item added ✓');
-    setTimeout(loadItems, 2000);
+    setTimeout(silentRefresh, 2000);
   } catch(e) {
     if (btn) { btn.disabled = false; btn.textContent = 'Save item →'; }
     showToast('Save failed: '+e.message);
@@ -936,7 +937,7 @@ function renderItemWindow() {
   const coverPhoto = photos.length ? photos[0] : null;
   const imgSection = (coverPhoto
     ? '<img src="'+coverPhoto+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">'
-    : '<label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:2rem;text-align:center;width:100%;height:100%;position:relative"><svg viewBox="0 0 24 24" style="width:40px;height:40px;fill:none;stroke:var(--border2);stroke-width:1;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><p style="font-size:13px;color:var(--muted);font-weight:600">Tap to add photos</p><small style="font-size:10px;color:var(--muted)">Camera or Gallery · up to 6</small><input type="file" accept="image/*" multiple data-photo-input="1" onchange="onImg(event)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.01;cursor:pointer;font-size:16px"></label>'
+    : '<div class="iw-img-ph" data-addphoto="1" style="cursor:pointer"><svg viewBox="0 0 24 24" style="width:40px;height:40px;fill:none;stroke:var(--border2);stroke-width:1;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><p style="font-size:13px;color:var(--muted);font-weight:600">Tap to add photos</p><small style="font-size:10px;color:var(--muted)">Camera or Gallery</small></div>'
   ) + (photos.length > 1 ? '<div class="photo-count-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg> '+photos.length+'</div>' : '');
   // Build thumbnail strip
   const thumbStrip = '<div class="photo-strip">'
@@ -948,7 +949,7 @@ function renderItemWindow() {
         +'</div>'
       ).join('')
     + (photos.length < 6
-        ? '<label class="photo-add-btn"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add photo</span><input type="file" accept="image/*" multiple data-photo-input="1" onchange="onImg(event)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.01;cursor:pointer;font-size:16px"></label>'
+        ? '<div class="photo-add-btn" data-addphoto="1"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add photo</span></div>'
         : '')
     + '</div>';
   const catOpts  = CATS.map(c  => '<option value="'+c+'"'+(form.category===c?' selected':'')+'>'+c+'</option>').join('');
@@ -1331,6 +1332,9 @@ function render() {
 // Single delegated event listener — handles all card clicks safely
 // Works on local files, Vercel, mobile — no inline onclick needed
 document.addEventListener('click', function(e) {
+  // Photo add — trigger persistent static file input (iOS requires static DOM input)
+  const addPhoto = e.target.closest('[data-addphoto]');
+  if (addPhoto) { document.getElementById('pfi').click(); return; }
   // Card clicks
   const pubCard = e.target.closest('[data-pubid]');
   if (pubCard) { openPubDetail(pubCard.dataset.pubid); return; }
@@ -1342,6 +1346,10 @@ document.addEventListener('click', function(e) {
   // Gallery dot clicks
   const dot = e.target.closest('[data-dotidx]');
   if (dot) { galleryIdx = parseInt(dot.dataset.dotidx); render(); return; }
+});
+// Wire persistent input to onImg handler
+document.getElementById('pfi').addEventListener('change', function(e) {
+  if (e.target.files.length) { onImg(e); this.value = ''; }
 });
 
 // Delegated change listener for file inputs (photo upload)
@@ -1375,13 +1383,21 @@ document.addEventListener('change', function(e) {
 
 
 
+async function silentRefresh() {
+  try {
+    const res = await apiCall({ action: 'getAll' });
+    if (res.items && res.items.length > 0) {
+      items = res.items.map(normalise);
+      render(); // re-render silently — no loading spinner
+    }
+  } catch(e) { /* silent fail — keep showing current items */ }
+}
+
 try {
   loadTheme();
   render();
   loadItems();
-  setInterval(function() {
-    if (getMode() === 'public') loadItems();
-  }, 60000);
+  setInterval(silentRefresh, 60000);
 } catch(err) {
   document.getElementById('root').innerHTML =
     '<div style="color:#fff;padding:2rem;font-family:monospace;background:#07070f;min-height:100vh">'
