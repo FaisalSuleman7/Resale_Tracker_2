@@ -673,14 +673,12 @@ function openAdd() {
   winMode='add'; winOpen=true;
   form = { name:'', brand:'', category:CATS[0], type:TYPES[0], status:'available', paid:'', ask:'', final:'', notes:'', visible:true };
   photos = []; photosChanged=false;
-  requestMediaPermission();
   render();
 }
 function openEdit(id) {
   const it = items.find(i => String(i.id)===String(id)); if (!it) return;
   winMode='edit'; winOpen=true;
   form = {...it}; photos = getPhotos(it).slice(); photosChanged=false;
-  requestMediaPermission();
   render();
 }
 function closeWin() { winOpen=false; render(); }
@@ -950,7 +948,7 @@ function renderItemWindow() {
         +'</div>'
       ).join('')
     + (photos.length < 6
-        ? '<label class="photo-add-btn" style="cursor:pointer;position:relative;overflow:hidden"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span><input type="file" accept="image/*" multiple onchange="onImg(event)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px"></label>'
+        ? '<label class="photo-add-btn" style="cursor:pointer;position:relative;overflow:hidden"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span><input type="file" accept="image/*" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px"></label>'
         : '')
     + '</div>';
   const catOpts  = CATS.map(c  => '<option value="'+c+'"'+(form.category===c?' selected':'')+'>'+c+'</option>').join('');
@@ -1323,15 +1321,7 @@ function render() {
   if (pubDetailItem) modalHtml += renderPubDetailModal(pubDetailItem);
   if (mroot) mroot.innerHTML = modalHtml;
 
-  // Wire file inputs after every render — addEventListener works on injected elements
-  // unlike inline onchange which can be stripped by some mobile browsers
-  ['img-input-cover','img-input-add'].forEach(function(id) {
-    const el = document.getElementById(id);
-    if (el && !el._wired) {
-      el.addEventListener('change', function(e) { onImg(e); this.value=''; });
-      el._wired = true;
-    }
-  });
+
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
@@ -1355,11 +1345,14 @@ document.addEventListener('click', function(e) {
 });
 
 
-// Delegated change listener for file inputs (photo upload)
-// More reliable than inline onchange on dynamically rendered elements
+
+
+// Single file input handler — works on all devices
 document.addEventListener('change', function(e) {
-  if (e.target && e.target.dataset.photoInput) {
+  var t = e.target;
+  if (t && t.type === 'file' && t.files && t.files.length) {
     onImg(e);
+    setTimeout(function() { try { t.value = ''; } catch(x) {} }, 100);
   }
 });
 
@@ -1385,21 +1378,6 @@ document.addEventListener('change', function(e) {
 })();
 
 
-
-// Request camera/media permission explicitly
-// This shows the browser permission dialog on first use
-// Once granted, file input works normally on all Android/iOS devices
-async function requestMediaPermission() {
-  try {
-    // Try to access camera — this triggers Chrome's permission popup
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    // Permission granted — stop the stream immediately (we don't need it)
-    stream.getTracks().forEach(t => t.stop());
-  } catch(err) {
-    // Permission denied or not supported — file input may still work for gallery
-    console.log('Camera permission:', err.message);
-  }
-}
 
 async function silentRefresh() {
   try {
