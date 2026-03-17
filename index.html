@@ -936,7 +936,7 @@ function renderItemWindow() {
   const coverPhoto = photos.length ? photos[0] : null;
   const imgSection = (coverPhoto
     ? '<img src="'+coverPhoto+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">'
-    : '<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:2rem;text-align:center;width:100%;height:100%;cursor:pointer;position:relative"><svg viewBox="0 0 24 24" style="width:40px;height:40px;fill:none;stroke:var(--border2);stroke-width:1;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><p style="font-size:13px;color:var(--muted);font-weight:600">Add photos</p><small style="font-size:10px;color:var(--muted)">Camera · Gallery · Files</small><input type="file" accept="image/*" multiple onchange="onImg(event)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer"></label>'
+    : '<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:2rem;text-align:center;width:100%;height:100%;cursor:pointer;position:relative"><svg viewBox="0 0 24 24" style="width:40px;height:40px;fill:none;stroke:var(--border2);stroke-width:1;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><p style="font-size:13px;color:var(--muted);font-weight:600">Add photos</p><small style="font-size:10px;color:var(--muted)">Camera · Gallery · Files</small><input type="file" id="img-input-cover" accept="image/*" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer"></label>'
   ) + (photos.length > 1 ? '<div class="photo-count-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg> '+photos.length+'</div>' : '');
   // Build thumbnail strip
   const thumbStrip = '<div class="photo-strip">'
@@ -948,7 +948,7 @@ function renderItemWindow() {
         +'</div>'
       ).join('')
     + (photos.length < 6
-        ? '<label class="photo-add-btn" style="cursor:pointer"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span><input type="file" accept="image/*" multiple onchange="onImg(event)" style="position:absolute;width:0;height:0;opacity:0"></label>'
+        ? '<label class="photo-add-btn" style="cursor:pointer"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span><input type="file" id="img-input-add" accept="image/*" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer"></label>'
         : '')
     + '</div>';
   const catOpts  = CATS.map(c  => '<option value="'+c+'"'+(form.category===c?' selected':'')+'>'+c+'</option>').join('');
@@ -1307,7 +1307,6 @@ function render() {
   const root  = document.getElementById('root');
   const mroot = document.getElementById('modal-root');
 
-  // ── Main content ──────────────────────────────────────────────────────────
   if (mode==='login') {
     root.innerHTML = renderLogin();
     setTimeout(() => { const i=document.getElementById('pw-input'); if(i) i.focus(); }, 50);
@@ -1317,13 +1316,20 @@ function render() {
     root.innerHTML = renderPublic();
   }
 
-  // ── Modals rendered into separate container outside #root ─────────────────
-  // This prevents modals from being destroyed when root re-renders,
-  // and fixes position:fixed clipping on iOS Safari.
   let modalHtml = '';
   if (winOpen) modalHtml += renderItemWindow();
   if (pubDetailItem) modalHtml += renderPubDetailModal(pubDetailItem);
   if (mroot) mroot.innerHTML = modalHtml;
+
+  // Wire file inputs after every render — addEventListener works on injected elements
+  // unlike inline onchange which can be stripped by some mobile browsers
+  ['img-input-cover','img-input-add'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el && !el._wired) {
+      el.addEventListener('change', function(e) { onImg(e); this.value=''; });
+      el._wired = true;
+    }
+  });
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
