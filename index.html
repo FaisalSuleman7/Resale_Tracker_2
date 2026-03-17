@@ -1373,19 +1373,22 @@ document.addEventListener('change', function(e) {
   }, { passive: true });
 })();
 
-// Wire persistent file inputs to onImg handler
-// Done after DOM ready — these inputs live in real DOM, work on iOS/Android
-document.getElementById('pfi-single').addEventListener('change', onImg);
-document.getElementById('pfi-add').addEventListener('change', onImg);
 
-loadTheme();
-render();
-loadItems();
 
-// Auto-refresh items every 60s so public page stays in sync across devices
-setInterval(function() {
-  if (getMode() === 'public') loadItems();
-}, 60000);
+try {
+  loadTheme();
+  render();
+  loadItems();
+  setInterval(function() {
+    if (getMode() === 'public') loadItems();
+  }, 60000);
+} catch(err) {
+  document.getElementById('root').innerHTML =
+    '<div style="color:#fff;padding:2rem;font-family:monospace;background:#07070f;min-height:100vh">'
+    + '<h2 style="color:#ef4444;margin-bottom:1rem">⚠ Startup Error</h2>'
+    + '<pre style="white-space:pre-wrap;color:#f87171">' + err.stack + '</pre>'
+    + '</div>';
+}
 </script>
 </body>
 </html>
