@@ -410,17 +410,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 @media(max-width:900px){.analytics-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.kpi8-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ibtn span{display:none}.frow3{grid-template-columns:1fr 1fr}.pub-grid{padding:14px;gap:12px}.items-grid{padding:14px;gap:12px}}
 @media(max-width:400px){.kpi8-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.frow2{grid-template-columns:1fr}}
+/* ── PHOTO UPLOAD OVERLAY ── */
+#photo-label{position:fixed;inset:0;z-index:-1;opacity:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.82);gap:20px;transition:opacity 0.2s}
+body.show-upload #photo-label{z-index:10000;opacity:1}
+#photo-label input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+#photo-label-text{color:#fff;font-size:17px;font-weight:700;font-family:'DM Sans',sans-serif;background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:18px 32px;border-radius:16px;pointer-events:none;text-align:center;line-height:1.6;box-shadow:0 8px 32px rgba(99,102,241,0.4);max-width:300px}
+#photo-cancel{color:rgba(255,255,255,0.5);font-size:12px;font-family:'DM Sans',sans-serif;pointer-events:none}
+
 </style>
 
 </head>
 <body>
 <div id="root"></div>
 <div id="modal-root"></div>
-<!-- Photo upload — MUST be in static HTML for iOS/Android camera access -->
-<!-- CSS class 'show-upload' on body makes it visible -->
+<!-- Photo upload — in static HTML so ALL browsers allow camera/gallery access -->
 <label id="photo-label">
   <input type="file" id="pfi" accept="image/*" multiple onchange="handlePhotoInput(event)">
-  <span id="photo-label-text">📷 Take photo or choose from gallery</span>
+  <div id="photo-label-text">📷 Tap here to add photo<br><small style="font-weight:400;font-size:13px">Camera · Gallery · Files</small></div>
+  <div id="photo-cancel">Tap outside to cancel</div>
 </label>
 
 <!-- File inputs handled inline via label elements -->
