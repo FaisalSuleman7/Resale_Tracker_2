@@ -416,7 +416,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <body>
 <div id="root"></div>
 <div id="modal-root"></div>
-<input type="file" id="pfi" accept="image/*" multiple style="position:fixed;top:-100px;left:-100px;width:100px;height:100px;opacity:0;z-index:9999">
+<!-- Photo upload — MUST be in static HTML for iOS/Android camera access -->
+<!-- CSS class 'show-upload' on body makes it visible -->
+<label id="photo-label">
+  <input type="file" id="pfi" accept="image/*" multiple onchange="handlePhotoInput(event)">
+  <span id="photo-label-text">📷 Take photo or choose from gallery</span>
+</label>
+
 <!-- File inputs handled inline via label elements -->
 
 <div class="toast-wrap" id="tw"></div>
@@ -1334,7 +1340,16 @@ function render() {
 document.addEventListener('click', function(e) {
   // Photo add — trigger persistent static file input (iOS requires static DOM input)
   const addPhoto = e.target.closest('[data-addphoto]');
-  if (addPhoto) { document.getElementById('pfi').click(); return; }
+  if (addPhoto) {
+    // Show the full-screen upload overlay (CSS-driven, no .click() needed)
+    document.body.classList.add('show-upload');
+    return;
+  }
+  // Clicking backdrop of upload overlay closes it
+  if (e.target.id === 'photo-label') {
+    document.body.classList.remove('show-upload');
+    return;
+  }
   // Card clicks
   const pubCard = e.target.closest('[data-pubid]');
   if (pubCard) { openPubDetail(pubCard.dataset.pubid); return; }
@@ -1347,10 +1362,13 @@ document.addEventListener('click', function(e) {
   const dot = e.target.closest('[data-dotidx]');
   if (dot) { galleryIdx = parseInt(dot.dataset.dotidx); render(); return; }
 });
-// Wire persistent input to onImg handler
-document.getElementById('pfi').addEventListener('change', function(e) {
-  if (e.target.files.length) { onImg(e); this.value = ''; }
-});
+function handlePhotoInput(e) {
+  document.body.classList.remove('show-upload');
+  if (e.target.files && e.target.files.length) {
+    onImg(e);
+    e.target.value = '';
+  }
+}
 
 // Delegated change listener for file inputs (photo upload)
 // More reliable than inline onchange on dynamically rendered elements
