@@ -1350,9 +1350,14 @@ document.addEventListener('click', function(e) {
 // Single file input handler — works on all devices
 document.addEventListener('change', function(e) {
   var t = e.target;
-  if (t && t.type === 'file' && t.files && t.files.length) {
-    onImg(e);
-    setTimeout(function() { try { t.value = ''; } catch(x) {} }, 100);
+  if (t && t.type === 'file') {
+    var count = t.files ? t.files.length : 0;
+    showToast('DEBUG: files=' + count + ' type=' + t.type);
+    console.log('File input change:', t.id, 'files:', count, t.files);
+    if (count > 0) {
+      onImg(e);
+      setTimeout(function() { try { t.value = ''; } catch(x) {} }, 100);
+    }
   }
 });
 
